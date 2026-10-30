@@ -1,0 +1,2155 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>A Sky Full of Wishes</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<meta name="description" content="Fold your Diwali wish into a lantern, light it, and release it into a sky shared with strangers. Read theirs too.">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="A Sky Full of Wishes">
+<meta property="og:title" content="A Sky Full of Wishes">
+<meta property="og:description" content="Fold your Diwali wish into a lantern and release it into a sky shared with strangers. Read theirs too.">
+<meta property="og:url" content="https://sky-full-of-wishes.vercel.app/">
+<meta property="og:image" content="https://sky-full-of-wishes.vercel.app/og-image.jpg">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="Glowing paper lanterns rising over an Indian city on Diwali night">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:image" content="https://sky-full-of-wishes.vercel.app/og-image.jpg">
+<meta name="theme-color" content="#070a22">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 64 64%27%3E%3Crect width=%2764%27 height=%2764%27 rx=%2714%27 fill=%27%23070a22%27/%3E%3Cpath d=%27M18 14h28l-5 34H23z%27 fill=%27%23ff9442%27/%3E%3Cellipse cx=%2732%27 cy=%2749%27 rx=%274%27 ry=%273%27 fill=%27%23ffe7a8%27/%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Figtree:wght@400;500;600&family=Kalam&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght,SOFT@9..144,400,100&display=swap">
+<style>
+/* Layout: a full-screen Amavasya night sky (canvas) with a city skyline; UI floats over it as a header, a bottom dock, and slide-up sheets. */
+:root{
+  --night:#070a22;
+  --night-2:#141846;
+  --horizon:#43203f;
+  --ink:#f6eddf;
+  --muted:#aba6cf;
+  --line:rgba(255,255,255,.14);
+  --panel:#11143a;
+  --glow:#ffb85c;
+  --flame:#ffe7a8;
+  --paper:#fff4df;
+  --paper-ink:#2c1a0e;
+  --k-saffron:#ff9442;
+  --k-rose:#ff6aa8;
+  --k-teal:#3fd0c0;
+  --k-violet:#a98bff;
+  --display:"Fraunces","Iowan Old Style",Georgia,serif;
+  --hand:"Kalam","Segoe Print","Bradley Hand",cursive;
+  --body:"Figtree","Segoe UI",system-ui,sans-serif;
+  color-scheme:dark;
+}
+*{box-sizing:border-box}
+h1,h2,.empty .big{font-variation-settings:"SOFT" 100,"opsz" 48}
+[hidden]{display:none!important}
+html,body{height:100%}
+body{
+  margin:0;overflow:hidden;
+  background:linear-gradient(180deg,var(--night) 0%,var(--night-2) 55%,var(--horizon) 100%);
+  color:var(--ink);font-family:var(--body);font-size:16px;line-height:1.45;
+  -webkit-font-smoothing:antialiased;
+  -webkit-tap-highlight-color:transparent;
+}
+#sky{position:fixed;inset:0;width:100%;height:100%;display:block;touch-action:manipulation;cursor:pointer}
+.gutter{padding-left:max(16px, env(safe-area-inset-left, 0px));padding-right:max(16px, env(safe-area-inset-right, 0px))}
+
+/* header */
+.top{position:fixed;top:0;left:0;right:0;padding-top:calc(14px + env(safe-area-inset-top, 0px));
+  display:flex;justify-content:space-between;align-items:flex-start;gap:12px;pointer-events:none;z-index:2}
+.brand{display:flex;flex-direction:column;align-items:flex-start;gap:4px;min-width:0}
+.brand h1{margin:0;font-family:var(--display);font-weight:400;font-size:22px;line-height:1.15;letter-spacing:-.005em;white-space:nowrap;
+  text-shadow:0 0 18px rgba(255,184,92,.45)}
+.stat{pointer-events:auto;font:inherit;font-size:13px;font-weight:500;color:var(--muted);cursor:pointer;background:none;border:0;padding:2px 0;
+  display:inline-flex;align-items:center;gap:7px;max-width:100%;font-variant-numeric:tabular-nums;text-shadow:0 1px 8px rgba(7,10,34,.9)}
+.stat:focus-visible{outline:2px solid var(--flame);outline-offset:3px;border-radius:4px}
+@media (min-width:700px){.brand h1{font-size:30px}}
+.stat b{color:var(--glow);font-weight:600}
+.stat #tickerText{transition:opacity .35s;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.stat .fade{opacity:0}
+.tdot{width:7px;height:7px;border-radius:50%;background:var(--glow);box-shadow:0 0 8px var(--glow);flex:none;animation:tpulse 2s ease-in-out infinite}
+@keyframes tpulse{50%{opacity:.35}}
+.board{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:6px}
+.board li{display:grid;grid-template-columns:22px minmax(0,1fr) 4.5ch;align-items:center;gap:10px;padding:6px 10px;border-radius:12px;font-variant-numeric:tabular-nums}
+.board li.me{background:rgba(255,184,92,.12);box-shadow:inset 0 0 0 1px rgba(255,184,92,.45)}
+.board .rk{color:var(--muted);font-size:13px;font-weight:600;text-align:right}
+.board .nm{display:flex;flex-direction:column;gap:5px;min-width:0}
+.board .nm span{font-weight:600;font-size:15px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.board .nm em{font-style:normal;font-weight:500;font-size:12px;color:var(--glow);margin-left:6px}
+.board .bar{height:5px;border-radius:3px;background:rgba(255,255,255,.08);overflow:hidden}
+.board .bar i{display:block;height:100%;border-radius:3px;background:linear-gradient(90deg,#ffb85c,#ff7a6a)}
+.board .n{font-weight:600;font-size:15px;text-align:right}
+.board li:first-child .rk{color:var(--glow)}
+.right{display:flex;flex-direction:column;align-items:flex-end;gap:8px}
+.icons{display:flex;gap:8px;flex:none}
+.icon{pointer-events:auto;font:inherit;font-size:15px;font-weight:600;cursor:pointer;color:var(--ink);width:36px;height:36px;padding:0;
+  display:grid;place-items:center;border:0;border-radius:50%;
+  background:rgba(17,20,58,.6);box-shadow:inset 0 0 0 1px var(--line);-webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px)}
+.icon:focus-visible{outline:2px solid var(--flame);outline-offset:3px}
+.music .waves{display:none}
+.music[aria-pressed="true"]{color:#2a1405;background:var(--glow);box-shadow:0 0 18px rgba(255,184,92,.5)}
+.music[aria-pressed="true"] .waves{display:inline}
+.music[aria-pressed="true"] .mute{display:none}
+.guide{position:fixed;left:50%;top:50%;z-index:7;width:min(380px,calc(100% - 32px));max-height:calc(100% - 40px);overflow:auto;
+  transform:translate(-50%,-46%) scale(.97);opacity:0;transition:transform .4s cubic-bezier(.2,.8,.2,1),opacity .35s;
+  background:var(--panel);border-radius:22px;padding:24px 20px 18px;
+  box-shadow:inset 0 0 0 1px var(--line),0 30px 80px rgba(0,0,0,.6),0 0 70px rgba(255,184,92,.16);
+  display:flex;flex-direction:column;gap:16px}
+.guide.show{opacity:1;transform:translate(-50%,-50%)}
+.guide h2{margin:0;font-family:var(--display);font-weight:400;font-size:23px;line-height:1.2;text-wrap:balance}
+.steps{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:12px}
+.steps li{display:flex;align-items:center;gap:12px}
+.steps .n{flex:none;width:26px;height:26px;border-radius:50%;display:grid;place-items:center;font-weight:600;font-size:14px;color:#2a1405;background:var(--glow);box-shadow:0 0 14px rgba(255,184,92,.45)}
+.steps b{font-weight:500;font-size:16px;line-height:1.3}
+.guide .t{margin:0;color:var(--muted);font-size:15px}
+.gift-for{margin:0;font-family:var(--hand);font-size:30px;line-height:1.2;color:var(--glow);text-shadow:0 0 18px rgba(255,184,92,.45)}
+.eyebrow{margin:0;font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:var(--glow)}
+.jwish{margin:0;font-family:var(--hand);font-size:22px;line-height:1.35;color:var(--ink);overflow-wrap:anywhere}
+.jstats{display:grid;grid-auto-flow:column;grid-auto-columns:minmax(0,1fr);gap:8px}
+.jstats div{display:flex;flex-direction:column;gap:2px;padding:12px 8px;border-radius:14px;background:rgba(255,255,255,.05);box-shadow:inset 0 0 0 1px var(--line);text-align:center}
+.jstats b{font-family:var(--display);font-weight:400;font-size:30px;line-height:1.1;color:var(--glow);font-variant-numeric:tabular-nums}
+.jstats span{font-size:12px;color:var(--muted)}
+.tip{margin:0;font-size:14px;color:var(--ink);padding:10px 12px;border-radius:12px;background:rgba(255,255,255,.05);box-shadow:inset 0 0 0 1px var(--line)}
+
+.hint{position:fixed;left:0;right:0;bottom:calc(30vh + env(safe-area-inset-bottom, 0px));text-align:center;
+  font-size:14px;color:var(--muted);pointer-events:none;transition:opacity 1.2s;z-index:2}
+.hint.off{opacity:0}
+.empty{position:fixed;left:0;right:0;top:38%;text-align:center;pointer-events:none;z-index:2;display:flex;flex-direction:column;gap:6px;align-items:center}
+.empty p{margin:0}
+.empty .big{font-family:var(--display);font-size:26px}
+.empty .small{color:var(--muted);font-size:15px;max-width:28ch}
+
+/* dock */
+.dock{position:fixed;left:0;right:0;bottom:0;padding-bottom:calc(18px + env(safe-area-inset-bottom, 0px));
+  display:flex;flex-direction:column;align-items:center;gap:10px;z-index:3;pointer-events:none}
+.dock > *{pointer-events:auto}
+.btn{
+  font:inherit;font-weight:600;font-size:17px;cursor:pointer;border:0;border-radius:999px;
+  padding:14px 26px;display:inline-flex;align-items:center;justify-content:center;gap:10px;text-decoration:none;
+  background:linear-gradient(180deg,#ffc978,var(--glow));color:#2a1405;
+  box-shadow:0 0 0 1px rgba(255,220,160,.5) inset,0 10px 30px rgba(255,160,60,.35);
+  transition:transform .15s, box-shadow .15s;
+}
+.btn:active{transform:scale(.97)}
+.btn:focus-visible,.link:focus-visible,.swatch input:focus-visible + span,textarea:focus-visible,input[type=text]:focus-visible{outline:2px solid var(--flame);outline-offset:3px}
+.btn.ghost{background:rgba(17,20,58,.55);color:var(--ink);box-shadow:inset 0 0 0 1px var(--line);
+  -webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px)}
+.btn.block{width:100%}
+.btn[disabled]{opacity:.45;cursor:not-allowed}
+.link{font:inherit;font-size:14px;background:none;border:0;color:var(--muted);text-decoration:underline;text-underline-offset:3px;cursor:pointer;padding:6px}
+.flame-ico{width:12px;height:16px;border-radius:50% 50% 50% 50%/60% 60% 40% 40%;background:radial-gradient(circle at 50% 70%,#fff8e0 0 25%,#ffb347 60%,#e2611a);display:inline-block}
+
+.preview{position:fixed;left:0;right:0;top:calc(92px + env(safe-area-inset-top, 0px));z-index:2;display:flex;justify-content:center;pointer-events:none}
+.preview span{font-size:12px;color:var(--muted);background:rgba(17,20,58,.6);padding:4px 10px;border-radius:999px;box-shadow:inset 0 0 0 1px var(--line)}
+
+/* sheets */
+.scrim{position:fixed;inset:0;background:rgba(4,5,20,.45);z-index:5;opacity:0;transition:opacity .3s}
+.scrim.show{opacity:1}
+.sheet{position:fixed;left:0;right:0;bottom:0;z-index:6;max-height:92%;overflow:auto;
+  background:var(--panel);border-radius:24px 24px 0 0;box-shadow:0 -1px 0 var(--line),0 -20px 60px rgba(0,0,0,.5);
+  padding-block:20px 0;
+  transform:translateY(105%);transition:transform .45s cubic-bezier(.2,.8,.2,1)}
+.sheet.show{transform:none}
+.sheet-in{max-width:460px;margin:0 auto;display:flex;flex-direction:column;gap:16px}
+.sheet-foot{position:sticky;bottom:0;z-index:2;display:flex;flex-direction:column;gap:4px;margin-top:2px;
+  padding-top:18px;padding-bottom:calc(12px + env(safe-area-inset-bottom, 0px));
+  background:linear-gradient(to bottom,rgba(17,20,58,0),var(--panel) 16px)}
+.sheet-foot .link{align-self:center}
+.share-row{display:grid;grid-auto-flow:column;grid-auto-columns:minmax(0,1fr);gap:8px;margin-top:6px}
+.share-row .btn{padding:11px 8px;font-size:14px;white-space:nowrap}
+.field .lbl{display:block}
+.field .opt{opacity:.7}
+.grab{width:40px;height:4px;border-radius:2px;background:var(--line);margin:0 auto -4px}
+.sheet h2{margin:0;font-family:var(--display);font-weight:400;font-size:24px;line-height:1.15;text-wrap:balance}
+.sheet .lead{margin:0;color:var(--muted);font-size:15px}
+label.field{display:flex;flex-direction:column;gap:6px;font-size:14px;color:var(--muted)}
+textarea,input[type=text]{
+  font-family:var(--hand);font-size:22px;line-height:1.35;color:var(--paper-ink);
+  background:var(--paper);border:0;border-radius:14px;padding:14px 16px;resize:none;width:100%;
+  box-shadow:inset 0 0 0 1px rgba(0,0,0,.08)}
+input[type=text]{font-family:var(--body);font-size:16px;padding:12px 14px}
+.counter{align-self:flex-end;font-size:12px;color:var(--muted);font-variant-numeric:tabular-nums;margin-top:-4px}
+.swatches{display:flex;gap:10px;flex-wrap:wrap}
+.swatch{position:relative;cursor:pointer}
+.swatch input{position:absolute;opacity:0;inset:0}
+.swatch span{display:flex;align-items:center;gap:8px;padding:8px 12px 8px 8px;border-radius:999px;font-size:14px;box-shadow:inset 0 0 0 1px var(--line)}
+.swatch span i{width:20px;height:20px;border-radius:50%;background:var(--c);box-shadow:0 0 10px var(--c)}
+.swatch input:checked + span{box-shadow:inset 0 0 0 2px var(--c);background:rgba(255,255,255,.06)}
+.note{font-size:13px;color:var(--muted);margin:0}
+.err{font-size:14px;color:#ffb4a8;margin:0}
+
+/* fold stage */
+.stage{display:flex;flex-direction:column;align-items:center;gap:18px;padding-top:6px}
+.lantern-wrap{position:relative;width:min(300px,100%);height:310px}
+#lc{display:block;width:100%;height:100%}
+.ptext{position:absolute;left:50%;top:calc(47% - 5px);transform:translate(-50%,-50%);width:186px;margin:0;pointer-events:none;
+  font-family:var(--hand);font-size:15px;line-height:1.3;color:var(--paper-ink);text-align:center;transition:opacity .3s;
+  display:-webkit-box;-webkit-line-clamp:5;-webkit-box-orient:vertical;overflow:hidden;overflow-wrap:anywhere}
+.folded .ptext{opacity:0}
+.hold{position:relative;overflow:hidden;user-select:none;-webkit-user-select:none;touch-action:none;--p:0}
+.hold::before{content:"";position:absolute;inset:0;transform-origin:left;transform:scaleX(var(--p));background:rgba(255,255,255,.45)}
+.hold span{position:relative}
+.rise{animation:rise 1.4s cubic-bezier(.5,0,.8,.4) forwards}
+@keyframes rise{to{transform:translateY(-120vh) scale(.6);opacity:.2}}
+
+/* read card */
+.card{position:fixed;left:50%;top:50%;z-index:6;width:min(360px,calc(100% - 32px));
+  transform:translate(-50%,-46%) scale(.96);opacity:0;pointer-events:none;transition:transform .35s cubic-bezier(.2,.8,.2,1),opacity .3s;
+  background:var(--paper);color:var(--paper-ink);border-radius:20px;overflow:hidden;
+  box-shadow:0 0 0 1px rgba(255,255,255,.2),0 30px 80px rgba(0,0,0,.55),0 0 80px color-mix(in srgb,var(--pc) 40%,transparent)}
+.card.show{opacity:1;transform:translate(-50%,-50%);pointer-events:auto}
+.card .band{height:10px;background:var(--pc)}
+.card .body{padding:20px 22px 18px;display:flex;flex-direction:column;gap:14px}
+.card .who{font-size:12px;letter-spacing:.12em;text-transform:uppercase;color:#7a5a43;margin:0}
+.card .wish{font-family:var(--hand);font-size:25px;line-height:1.35;margin:0;overflow-wrap:anywhere}
+.card .meta{font-size:13px;color:#7a5a43;margin:0}
+.card .row{display:flex;justify-content:space-between;align-items:center;gap:10px}
+.card .btn{padding:11px 20px;font-size:15px}
+.card .link{color:#7a5a43}
+.card .confirm{font-size:14px;margin:0}
+.lightrow{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.lightbtn{font:inherit;font-weight:600;font-size:14px;cursor:pointer;color:var(--paper-ink);display:inline-flex;align-items:center;gap:8px;
+  padding:8px 14px 8px 12px;border:0;border-radius:999px;background:#fff;box-shadow:inset 0 0 0 1.5px #e6c08a,0 2px 0 #e6c08a;transition:transform .12s}
+.lightbtn:active{transform:translateY(2px);box-shadow:inset 0 0 0 1.5px #e6c08a}
+.lightbtn:focus-visible{outline:2px solid #c97a1a;outline-offset:2px}
+.lightbtn.done{background:#ffe4b3;box-shadow:inset 0 0 0 1.5px #f0a64a;cursor:default}
+.lightn{font-size:13px;color:#7a5a43;font-variant-numeric:tabular-nums}
+.lighthelp{margin:-6px 0 0;font-size:13px;line-height:1.4;color:#7a5a43}
+
+.report-img{height:min(42vh,400px);width:auto;max-width:100%;align-self:center;aspect-ratio:4/5;border-radius:16px;display:block;background:var(--night-2);box-shadow:0 0 0 1px var(--line)}
+.share-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.share-grid .wide{grid-column:1/-1}
+.share-grid .btn{padding:12px 14px;font-size:15px}
+.toggle{display:flex;align-items:center;gap:10px;font-size:15px;cursor:pointer}
+.toggle input{width:20px;height:20px;accent-color:var(--glow)}
+.hint2{font-size:13px;color:var(--muted);text-align:center;margin:0}
+
+.toast{position:fixed;left:50%;bottom:calc(130px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);z-index:9;
+  background:var(--paper);color:var(--paper-ink);font-weight:600;font-size:14px;padding:10px 16px;border-radius:999px;
+  box-shadow:0 10px 30px rgba(0,0,0,.4);max-width:calc(100% - 32px);text-align:center}
+textarea.copybox{position:fixed;left:-9999px;top:0;width:10px;height:10px}
+
+@media (prefers-reduced-motion:reduce){
+  .tdot{animation:none}
+  .guide{transition-duration:.01s!important}
+  .sheet,.card,.ptext,.scrim{transition-duration:.01s!important}
+  .rise{animation-duration:.01s}
+}
+</style>
+</head>
+<body>
+<canvas id="sky" aria-label="A night sky full of lanterns carrying people's wishes"></canvas>
+
+<header class="top gutter">
+  <div class="brand">
+    <h1>A Sky Full of Wishes</h1>
+    <button class="stat" id="ticker" aria-label="Lanterns tonight. Tap to see cities"><span class="tdot" aria-hidden="true"></span><span id="tickerText"></span></button>
+  </div>
+  <div class="icons">
+    <button class="icon music" id="music" aria-pressed="false" aria-label="Play music">
+      <svg viewBox="0 0 20 20" width="16" height="16" aria-hidden="true"><path d="M3 8h3l4-3.5v11L6 12H3z" fill="currentColor"/><path class="waves" d="M13 7.5a3.5 3.5 0 0 1 0 5M15.2 5.5a6.5 6.5 0 0 1 0 9" stroke="currentColor" stroke-width="1.6" fill="none" stroke-linecap="round"/><path class="mute" d="M13 7.5l5 5M18 7.5l-5 5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
+    </button>
+    <button class="icon" id="help" aria-label="How it works">?</button>
+  </div>
+</header>
+
+
+<div class="preview gutter" id="previewTag" hidden><span>Preview sky · sample lanterns</span></div>
+
+<div class="empty gutter" id="empty" hidden>
+  <p class="big">The sky is empty tonight</p>
+  <p class="small">The first lantern could be yours.</p>
+</div>
+
+<p class="hint" id="hint" hidden></p>
+
+<div class="dock gutter">
+  <button class="btn" id="openWrite"><i class="flame-ico" aria-hidden="true"></i>Release your lantern</button>
+  <button class="link" id="readRandom" style="color:var(--ink)">Read a stranger's wish</button>
+</div>
+
+<div class="scrim" id="scrim" hidden></div>
+
+<section class="guide" id="gift" role="dialog" aria-modal="true" aria-labelledby="giftTitle" hidden>
+  <p class="gift-for" id="giftFor" hidden></p>
+  <h2 id="giftTitle">Someone lit a lantern for you this Diwali</h2>
+  <p class="t">It's rising over the city right now. Open it to read their wish.</p>
+  <button class="btn block" id="giftGo">Watch it rise</button>
+</section>
+
+<section class="guide" id="journey" role="dialog" aria-modal="true" aria-labelledby="jTitle" hidden>
+  <p class="eyebrow">Welcome back</p>
+  <h2 id="jTitle">Your lantern has been travelling</h2>
+  <p class="jwish" id="jWish"></p>
+  <div class="jstats">
+    <div><b id="jReads">0</b><span>people read it</span></div>
+    <div id="jCityBox"><b id="jCities">0</b><span>cities</span></div>
+    <div><b id="jLights">0</b><span>sent light</span></div>
+  </div>
+  <p class="note" id="jNote" hidden>Sample numbers for the preview.</p>
+  <button class="btn block" id="jShare">Share its journey</button>
+  <button class="link" id="jSky" style="align-self:center">See it in the sky</button>
+</section>
+
+<section class="guide" id="guide" role="dialog" aria-modal="true" aria-labelledby="gTitle" hidden>
+  <h2 id="gTitle">Every lantern is someone's Diwali wish</h2>
+  <ol class="steps">
+    <li><span class="n" aria-hidden="true">1</span><b>Tap a lantern to read it</b></li>
+    <li><span class="n" aria-hidden="true">2</span><b>Write your own wish</b></li>
+    <li><span class="n" aria-hidden="true">3</span><b>Hold to light it, then let it go</b></li>
+  </ol>
+  <p class="t">Every wish is anonymous. Tap the sky and the city for little surprises.</p>
+  <button class="btn block" id="gGo">Show me the sky</button>
+</section>
+
+<!-- write + fold sheet -->
+<section class="sheet" id="writeSheet" role="dialog" aria-modal="true" aria-labelledby="wTitle" hidden>
+  <div class="sheet-in gutter">
+    <div class="grab" aria-hidden="true"></div>
+
+    <div id="stepWrite" style="display:flex;flex-direction:column;gap:14px">
+      <h2 id="wTitle">What is your one wish this Diwali?</h2>
+      <p class="lead">Fold it into a lantern and let it go. Anyone can read it, but no one will know it was yours.</p>
+      <label class="field" for="wish"><span class="lbl">Your wish</span>
+        <textarea id="wish" rows="3" maxlength="140" placeholder="I hope Maa stays healthy…"></textarea>
+      </label>
+      <span class="counter" id="counter">0/140</span>
+      <div class="field" role="radiogroup" aria-label="Lantern colour">
+        <span style="font-size:14px;color:var(--muted)">Lantern colour</span>
+        <div class="swatches" id="swatches"></div>
+      </div>
+      <label class="field" for="forName"><span class="lbl">Light it for someone <span class="opt">(optional)</span></span>
+        <input type="text" id="forName" maxlength="30" placeholder="Maa, my team, Riya…" autocomplete="off">
+      </label>
+      <label class="field" for="city"><span class="lbl">City <span class="opt">(optional)</span></span>
+        <input type="text" id="city" maxlength="30" placeholder="Delhi, Pune, Kochi…" autocomplete="off" list="cityList">
+        <datalist id="cityList"></datalist>
+      </label>
+      <p class="note">Leave out names, phone numbers and links. Your wish stays anonymous.</p>
+      <div class="sheet-foot">
+        <p class="err" id="wErr" hidden></p>
+        <button class="btn block" id="toFold" disabled>Fold into a lantern</button>
+        <button class="link" data-close>Not now</button>
+      </div>
+    </div>
+
+    <div id="stepFold" hidden>
+      <div class="stage">
+        <h2 id="fTitle" style="text-align:center">Folding your lantern</h2>
+        <div class="lantern-wrap" id="lw">
+          <canvas id="lc" aria-label="Your wish folding into a paper lantern"></canvas>
+          <p class="ptext" id="ptext"></p>
+        </div>
+        <p class="lead" id="fLead" style="text-align:center">Folding your wish into a lantern…</p>
+      </div>
+      <div class="sheet-foot">
+        <p class="err" id="fErr" hidden></p>
+        <button class="btn block hold" id="hold" disabled><span id="holdLabel">Light the diya: press and hold</span></button>
+        <button class="link" id="backWrite">Edit wish</button>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- share sheet -->
+<section class="sheet" id="citySheet" role="dialog" aria-modal="true" aria-labelledby="cTitle" hidden>
+  <div class="sheet-in gutter">
+    <div class="grab" aria-hidden="true"></div>
+    <h2 id="cTitle">Cities lighting up tonight</h2>
+    <p class="lead">Lanterns released in the last 24 hours. Add yours to push your city up.</p>
+    <ol class="board" id="board"></ol>
+    <p class="note" id="boardNote"></p>
+    <div class="sheet-foot">
+      <button class="btn block" id="boardGo">Release a lantern for my city</button>
+      <button class="link" data-close>Back to the sky</button>
+    </div>
+  </div>
+</section>
+
+<section class="sheet" id="shareSheet" role="dialog" aria-modal="true" aria-labelledby="sTitle" hidden>
+  <div class="sheet-in gutter">
+    <div class="grab" aria-hidden="true"></div>
+    <h2 id="sTitle">Your lantern is in the sky</h2>
+    <p class="lead" id="sLead">It will drift through other people's skies all night. Invite friends to release theirs.</p>
+    <img class="report-img" id="shareImg" alt="A Sky Full of Wishes share card">
+    <label class="toggle" for="showWish"><input type="checkbox" id="showWish"> Show my wish on the card</label>
+    <p class="hint2" id="saveHint"></p>
+    <div class="sheet-foot">
+      <a class="btn block" id="wa" target="_blank" rel="noopener" href="#">Send on WhatsApp</a>
+      <div class="share-row">
+        <a class="btn ghost" id="tw" target="_blank" rel="noopener" href="#">X</a>
+        <a class="btn ghost" id="li" target="_blank" rel="noopener" href="#">LinkedIn</a>
+        <button class="btn ghost" id="save" hidden>Save</button>
+        <button class="btn ghost" id="copy">Copy text</button>
+      </div>
+      <button class="link" data-close>Back to the sky</button>
+    </div>
+  </div>
+</section>
+
+<!-- read card -->
+<article class="card" id="card" role="dialog" aria-modal="true" aria-labelledby="cardWish" hidden>
+  <div class="band"></div>
+  <div class="body">
+    <p class="who" id="cardWho">Someone wrote</p>
+    <p class="wish" id="cardWish"></p>
+    <p class="meta" id="cardMeta"></p>
+    <div class="lightrow" id="lightRow">
+      <button class="lightbtn" id="lightBtn"><i class="flame-ico" aria-hidden="true"></i><span id="lightLabel">Send light</span></button>
+      <span class="lightn" id="lightN"></span>
+    </div>
+    <p class="lighthelp" id="lightHelp" hidden>It makes their lantern glow brighter for everyone. Fully anonymous.</p>
+    <div class="row" id="cardRow">
+      <button class="link" id="reportBtn">Report</button>
+      <button class="btn" id="letGo">Let it go</button>
+    </div>
+    <div class="row" id="confirmRow" hidden>
+      <p class="confirm">Something wrong with this wish? It is removed once a few people report it.</p>
+      <button class="btn" id="reportYes" style="flex:none">Report</button>
+    </div>
+  </div>
+</article>
+
+<div class="toast" id="toast" role="status" hidden></div>
+<textarea class="copybox" id="copybox" aria-hidden="true" tabindex="-1"></textarea>
+
+<script>
+/* ============ SETTINGS ============
+   For a shared sky that strangers can add to, create a free Supabase project,
+   run supabase-setup.sql in its SQL editor, then paste the two values below.
+   Leave them empty to run the preview sky (your lanterns + sample lanterns). */
+const CONFIG = {
+  SUPABASE_URL: "https://doowrlwhqnlxsvxypwvx.supabase.co",       // e.g. https://abcdxyz.supabase.co
+  SUPABASE_ANON_KEY: "sb_publishable_wvA27dJ0TT9t1gAxFziTQQ_vlHh1Z9M",  // Project Settings → API Keys → publishable key (or the legacy "anon public" key)
+  SHARE_URL: "https://sky-full-of-wishes.vercel.app"           // your hosted link, e.g. https://skyfullofwishes.netlify.app
+};
+const LIVE = !!(CONFIG.SUPABASE_URL && CONFIG.SUPABASE_ANON_KEY);
+// While the live sky has fewer real wishes than this, the sample lanterns keep it company.
+const SEED_UNTIL = 25;
+
+const COLORS = { saffron: "#ff9442", rose: "#ff6aa8", teal: "#3fd0c0", violet: "#a98bff" };
+const COLOR_NAMES = { saffron: "Saffron", rose: "Rose", teal: "Teal", violet: "Violet" };
+
+const SAMPLES = [
+  ["That Maa gets better. That is all.", "saffron", "Lucknow"],
+  ["Could not go home this Diwali. Next year, for sure.", "teal", "Bengaluru"],
+  ["That the startup works out and the team is never paid late.", "violet", "Gurugram"],
+  ["That Papa laughs again.", "rose", "Indore"],
+  ["To be a little less hard on myself.", "saffron", "Mumbai"],
+  ["To find Nani's laddoo recipe one day.", "rose", "Jaipur"],
+  ["May everyone spending Diwali alone find someone to share mithai with.", "teal", "Kochi"],
+  ["Clean air in Delhi. Even for one day.", "violet", "Delhi"],
+  ["That our long distance ends this year.", "rose", "Pune"],
+  ["That my dog is not scared of the crackers this year.", "saffron", "Chandigarh"],
+  ["A job where Sunday is actually Sunday.", "teal", "Hyderabad"],
+  ["Good board results for my little brother.", "violet", "Patna"]
+].map((s, i) => ({ id: "sample-" + i, text: s[0], color: s[1], city: s[2], created_at: new Date(Date.now() - (i + 1) * 47 * 60000).toISOString(), sample: true }));
+
+/* ---------- small helpers ---------- */
+const $ = (id) => document.getElementById(id);
+const lsGet = (k, d) => { try { const v = localStorage.getItem(k); return v ? JSON.parse(v) : d; } catch (e) { return d; } };
+const lsSet = (k, v) => { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) {} };
+const rand = (a, b) => a + Math.random() * (b - a);
+const shuffle = (a) => { for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; };
+const reduced = matchMedia("(prefers-reduced-motion: reduce)").matches;
+const inFrame = (() => { try { return window.self !== window.top; } catch (e) { return true; } })();
+function timeAgo(iso) {
+  const m = Math.max(0, (Date.now() - new Date(iso).getTime()) / 60000);
+  if (m < 2) return "just now";
+  if (m < 60) return Math.round(m) + " min ago";
+  const h = m / 60; if (h < 24) return Math.round(h) + (Math.round(h) === 1 ? " hour ago" : " hours ago");
+  const d = h / 24; if (d < 2) return "yesterday"; return Math.round(d) + " days ago";
+}
+let toastT;
+function toast(msg) { const t = $("toast"); t.textContent = msg; t.hidden = false; clearTimeout(toastT); toastT = setTimeout(() => t.hidden = true, 2600); }
+
+/* ---------- moderation (light, client-side) ---------- */
+const BLOCK = ["fuck","shit","bitch","bastard","cunt","dick","chutiya","chutia","madarchod","mc ","bc ","behenchod","bhenchod","bhosd","gandu","randi","lund","harami","kamina","saala kutta"];
+function checkWish(t) {
+  const s = " " + t.toLowerCase().replace(/[^a-z0-9ऀ-ॿ ]/g, " ") + " ";
+  if (t.trim().length < 3) return "Write a little more.";
+  if (/https?:|www\.|\.com|\.in\b|@/.test(t.toLowerCase())) return "Please leave out links and emails. Just the wish.";
+  if (/\d{8,}/.test(t.replace(/[\s-]/g, ""))) return "Please leave out phone numbers so your wish stays anonymous.";
+  if (BLOCK.some(w => { w = w.trim(); return w.length <= 3 ? s.includes(" " + w + " ") : s.includes(" " + w); })) return "Those words won't fit in a lantern. Try writing it another way?";
+  return "";
+}
+
+/* ---------- store ---------- */
+const mine = lsGet("kandil-mine", []);
+const reported = new Set(lsGet("kandil-reported", []));
+const store = {
+  total: 0,
+  async api(path, opts = {}) {
+    const res = await fetch(CONFIG.SUPABASE_URL.replace(/\/$/, "") + "/rest/v1/" + path, {
+      ...opts,
+      headers: { apikey: CONFIG.SUPABASE_ANON_KEY, ...(/^eyJ/.test(CONFIG.SUPABASE_ANON_KEY) ? { Authorization: "Bearer " + CONFIG.SUPABASE_ANON_KEY } : {}), "Content-Type": "application/json", ...(opts.headers || {}) }
+    });
+    if (!res.ok) throw new Error("http " + res.status);
+    return res;
+  },
+  async load() {
+    if (!LIVE) { this.total = SAMPLES.length + mine.length; return [...SAMPLES, ...mine]; }
+    const res = await this.api("wishes?select=id,text,color,city,for_name,light_count,read_count,created_at&order=created_at.desc&limit=400", { headers: { Prefer: "count=exact" } });
+    const rows = await res.json();
+    const cr = res.headers.get("content-range"); const tot = cr && +cr.split("/")[1];
+    this.total = Number.isFinite(tot) ? tot : rows.length;
+    markMine(rows);
+    const ids = new Set(rows.map(r => r.id));
+    const all = [...rows, ...mine.filter(m => !ids.has(m.id))];
+    return this.total < SEED_UNTIL ? [...all, ...SAMPLES] : all;
+  },
+  async since(iso) {
+    if (!LIVE) return [];
+    const res = await this.api("wishes?select=id,text,color,city,for_name,light_count,read_count,created_at&order=created_at.asc&limit=100&created_at=gt." + encodeURIComponent(iso));
+    return markMine(await res.json());
+  },
+  async getOne(id) {
+    if (!LIVE || !isUuid(id)) return null;
+    const res = await this.api("wishes?select=id,text,color,city,for_name,light_count,read_count,created_at&id=eq." + id);
+    return markMine(await res.json())[0] || null;
+  },
+  async light(id) { await this.api("lights", { method: "POST", headers: { Prefer: "return=minimal" }, body: JSON.stringify({ wish_id: id, visitor_id: getVid() }) }); },
+  async read(id, city) { await this.api("reads", { method: "POST", headers: { Prefer: "return=minimal" }, body: JSON.stringify({ wish_id: id, visitor_id: getVid(), city: city || null }) }); },
+  async journey(ids) { const res = await this.api("rpc/journey", { method: "POST", body: JSON.stringify({ ids }) }); return res.json(); },
+  async add(w) {
+    let row;
+    if (LIVE) {
+      const res = await this.api("wishes", { method: "POST", headers: { Prefer: "return=representation" }, body: JSON.stringify(w) });
+      row = (await res.json())[0];
+    } else {
+      row = { ...w, id: "local-" + Date.now(), light_count: 0, read_count: 0, created_at: new Date().toISOString() };
+    }
+    row.mine = true;
+    mine.push(row); lsSet("kandil-mine", mine.slice(-20));
+    this.total++;
+    return row;
+  },
+  async report(id) {
+    reported.add(id); lsSet("kandil-reported", [...reported]);
+    if (LIVE && !String(id).startsWith("local")) await this.api("reports", { method: "POST", headers: { Prefer: "return=minimal" }, body: JSON.stringify({ wish_id: id }) });
+  }
+};
+mine.forEach(m => m.mine = true);
+const isUuid = (id) => /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(String(id));
+function markMine(rows) { const ids = new Set(mine.map(m => m.id)); for (const r of rows) if (ids.has(r.id)) r.mine = true; return rows; }
+function getVid() { let v = lsGet("skyw-vid", null); if (!v) { v = newId(); lsSet("skyw-vid", v); } return v; }
+const lit = new Set(lsGet("skyw-lit", [])), readSet = new Set(lsGet("skyw-read", []));
+
+/* ---------- sky ---------- */
+const cv = $("sky"), ctx = cv.getContext("2d");
+let demo = null, lift = 0;
+let W = 0, H = 0, DPR = 1, stars = [], city = null, cityH = 0, groundH = 0;
+let wishes = [], lanterns = [], cursor = 0, selected = null, sparks = [];
+
+function makeSprite(hex) {
+  const S = 2; // supersample
+  const w = 200, h = 240;
+  const c = document.createElement("canvas"); c.width = w * S; c.height = h * S;
+  const x = c.getContext("2d"); x.scale(S, S);
+  const cx = w / 2, top = 70, bh = 82, tw = 33, bw = 21;
+  // glow
+  const g = x.createRadialGradient(cx, top + bh * .75, 4, cx, top + bh * .6, 100);
+  g.addColorStop(0, hexA(hex, .55)); g.addColorStop(.35, hexA(hex, .22)); g.addColorStop(1, hexA(hex, 0));
+  x.fillStyle = g; x.fillRect(0, 0, w, h);
+  // body
+  x.beginPath();
+  x.moveTo(cx - tw, top + 4);
+  x.quadraticCurveTo(cx, top - 6, cx + tw, top + 4);
+  x.quadraticCurveTo(cx + tw + 3, top + bh * .5, cx + bw, top + bh);
+  x.lineTo(cx - bw, top + bh);
+  x.quadraticCurveTo(cx - tw - 3, top + bh * .5, cx - tw, top + 4);
+  x.closePath();
+  const bg = x.createLinearGradient(0, top, 0, top + bh);
+  bg.addColorStop(0, mix(hex, "#2a0f14", .35)); bg.addColorStop(.45, hex); bg.addColorStop(.85, mix(hex, "#fff6d8", .6)); bg.addColorStop(1, "#fffbe8");
+  x.fillStyle = bg; x.fill();
+  x.save(); x.clip();
+  x.strokeStyle = "rgba(60,15,0,.22)"; x.lineWidth = 1.2;
+  for (const f of [-.4, 0, .4]) { x.beginPath(); x.moveTo(cx + f * tw, top); x.lineTo(cx + f * bw, top + bh); x.stroke(); }
+  x.restore();
+  // rim + flame
+  x.strokeStyle = "rgba(90,40,10,.6)"; x.lineWidth = 1.5;
+  x.beginPath(); x.moveTo(cx - bw, top + bh); x.lineTo(cx + bw, top + bh); x.stroke();
+  const fg = x.createRadialGradient(cx, top + bh + 2, 0, cx, top + bh + 2, 9);
+  fg.addColorStop(0, "#fffbe8"); fg.addColorStop(.5, "rgba(255,200,90,.9)"); fg.addColorStop(1, "rgba(255,140,40,0)");
+  x.fillStyle = fg; x.beginPath(); x.arc(cx, top + bh + 2, 9, 0, 7); x.fill();
+  return { c, w, h, anchorY: top + bh * .5 };
+}
+function hexA(hex, a) { const n = parseInt(hex.slice(1), 16); return `rgba(${n >> 16},${(n >> 8) & 255},${n & 255},${a})`; }
+function mix(a, b, t) {
+  const A = parseInt(a.slice(1), 16), B = parseInt(b.slice(1), 16);
+  const r = Math.round((A >> 16) * (1 - t) + (B >> 16) * t), g = Math.round(((A >> 8) & 255) * (1 - t) + ((B >> 8) & 255) * t), bl = Math.round((A & 255) * (1 - t) + (B & 255) * t);
+  return `rgb(${r},${g},${bl})`;
+}
+const SPRITES = {}; for (const k in COLORS) SPRITES[k] = makeSprite(COLORS[k]);
+
+/* ---------- city (2.5D illustration in three parallax layers) ---------- */
+const CITY = {
+  haze: "#33285f",
+  L: [
+    { face: "#2e2559", side: "#241c4b", top: "#3d3270", D: 6 },   // far
+    { face: "#211a48", side: "#140f31", top: "#382d68", D: 12 },  // mid
+    { face: "#161133", side: "#0a0820", top: "#2c2255", D: 20 }   // front
+  ],
+  ink: "#07051a"
+};
+const FAIRY = ["#ff6a5a", "#ffd35a", "#7fe0a0", "#7fb8ff", "#ff8ad8"];
+const GOLD = "#ffcf6a";
+const CM = 30, PAR = [4, 10, 18];
+const GLOWS = {};
+function glow(color) {
+  if (GLOWS[color]) return GLOWS[color];
+  const c = document.createElement("canvas"); c.width = c.height = 64;
+  const x = c.getContext("2d"), g = x.createRadialGradient(32, 32, 0, 32, 32, 32);
+  g.addColorStop(0, color); g.addColorStop(.25, hexA(color, .55)); g.addColorStop(1, hexA(color, 0));
+  x.fillStyle = g; x.fillRect(0, 0, 64, 64);
+  return (GLOWS[color] = c);
+}
+function litColor(rnd, a) {
+  const r = rnd();
+  if (r < .08) return `rgba(165,200,255,${a * .8})`;
+  if (r < .2) return `rgba(255,150,100,${a})`;
+  return `rgba(255,${185 + Math.floor(rnd() * 45)},${95 + Math.floor(rnd() * 35)},${a})`;
+}
+function bez(a, b, c, d, t) { const u = 1 - t; return u * u * u * a + 3 * u * u * t * b + 3 * u * t * t * c + t * t * t * d; }
+
+// an extruded block: front face, the side facing the centre of the street, and its roof seen from slightly above
+function box(x, X, Y, bw, bh, P, vx, s, topK = .45) {
+  const cx = X + bw / 2, dir = cx < vx ? 1 : -1;
+  const k = Math.min(1, Math.abs(cx - vx) / vx);
+  const dx = dir * P.D * s * (.2 + .8 * k), dy = P.D * s * topK;
+  const ex = dir > 0 ? X + bw : X;
+  let g = x.createLinearGradient(0, Y - dy, 0, Y + bh);
+  g.addColorStop(0, P.side); g.addColorStop(1, mix(P.side, "#000000", .35));
+  x.fillStyle = g;
+  x.beginPath(); x.moveTo(ex, Y); x.lineTo(ex + dx, Y - dy); x.lineTo(ex + dx, Y + bh - dy); x.lineTo(ex, Y + bh); x.closePath(); x.fill();
+  x.fillStyle = P.top;
+  x.beginPath(); x.moveTo(X, Y); x.lineTo(X + bw, Y); x.lineTo(X + bw + dx, Y - dy); x.lineTo(X + dx, Y - dy); x.closePath(); x.fill();
+  g = x.createLinearGradient(0, Y, 0, Y + bh);
+  g.addColorStop(0, P.face); g.addColorStop(.65, P.face); g.addColorStop(1, mix(P.face, "#7a3a55", .3));
+  x.fillStyle = g; x.fillRect(X, Y, bw, bh);
+  x.fillStyle = "rgba(255,255,255,.06)"; x.fillRect(dir > 0 ? X : X + bw - .9 * s, Y, .9 * s, bh);
+  x.fillStyle = "rgba(255,255,255,.05)"; x.fillRect(X, Y, bw, .8 * s);
+  return { dx, dy, dir };
+}
+function cylinder(x, cx, top, r, h, P) {
+  const g = x.createLinearGradient(cx - r, 0, cx + r, 0);
+  g.addColorStop(0, P.top); g.addColorStop(.4, P.face); g.addColorStop(1, P.side);
+  x.fillStyle = g; x.fillRect(cx - r, top, 2 * r, h);
+  x.beginPath(); x.ellipse(cx, top + h, r, r * .3, 0, 0, Math.PI); x.fill();
+  x.fillStyle = mix(P.top, "#ffffff", .06); x.beginPath(); x.ellipse(cx, top, r, r * .3, 0, 0, 7); x.fill();
+}
+function sphereFill(x, cx, cy, r, P) {
+  const g = x.createRadialGradient(cx - r * .35, cy - r * .4, r * .08, cx, cy, r * 1.2);
+  g.addColorStop(0, mix(P.top, "#ffffff", .1)); g.addColorStop(.5, P.face); g.addColorStop(1, P.side);
+  return g;
+}
+function ridgeFill(x, cx, w, P) { // faceted shading split down the middle
+  const g = x.createLinearGradient(cx - w, 0, cx + w, 0);
+  g.addColorStop(0, P.top); g.addColorStop(.49, P.face); g.addColorStop(.51, P.side); g.addColorStop(1, mix(P.side, "#000000", .3));
+  return g;
+}
+function onion(x, cx, b, r, s, P) {
+  x.fillStyle = sphereFill(x, cx, b - r, r * 1.2, P);
+  x.beginPath(); x.moveTo(cx - r, b);
+  x.bezierCurveTo(cx - r * 1.3, b - r * 1.1, cx - r * .2, b - r * 1.4, cx, b - r * 2);
+  x.bezierCurveTo(cx + r * .2, b - r * 1.4, cx + r * 1.3, b - r * 1.1, cx + r, b);
+  x.closePath(); x.fill();
+  x.fillStyle = P.side; x.fillRect(cx - .6 * s, b - r * 2 - 7 * s, 1.2 * s, 7 * s);
+}
+function hemi(x, cx, b, r, P) { x.fillStyle = sphereFill(x, cx, b, r, P); x.beginPath(); x.arc(cx, b, r, Math.PI, 0); x.fill(); }
+function chhatri(x, cx, base, w, s, P) {
+  x.fillStyle = P.side;
+  x.fillRect(cx - w / 2, base - 1.5 * s, w, 1.5 * s);
+  x.fillRect(cx - w / 2 + s, base - 8 * s, 1.2 * s, 7 * s);
+  x.fillRect(cx + w / 2 - 2.2 * s, base - 8 * s, 1.2 * s, 7 * s);
+  x.fillStyle = P.face; x.fillRect(cx - w / 2 - .6 * s, base - 9.2 * s, w + 1.2 * s, 1.4 * s);
+  hemi(x, cx, base - 9.2 * s, w * .42, P);
+  x.fillStyle = P.side; x.fillRect(cx - .4 * s, base - 9.2 * s - w * .42 - 3 * s, .8 * s, 3 * s);
+}
+function spire(x, cx, base, h, w, s, P) {
+  x.fillStyle = ridgeFill(x, cx, w, P);
+  x.beginPath(); x.moveTo(cx - w, base);
+  x.bezierCurveTo(cx - w * 1.05, base - h * .55, cx - w * .55, base - h * .9, cx - 4 * s, base - h);
+  x.lineTo(cx + 4 * s, base - h);
+  x.bezierCurveTo(cx + w * .55, base - h * .9, cx + w * 1.05, base - h * .55, cx + w, base);
+  x.closePath(); x.fill();
+  x.fillStyle = sphereFill(x, cx, base - h - 1.6 * s, Math.max(4 * s, w * .38), P);
+  x.beginPath(); x.ellipse(cx, base - h - 1.6 * s, Math.max(4 * s, w * .38), 2.4 * s, 0, 0, 7); x.fill();
+}
+function pyramid(x, l, r, base, h, P) {
+  const m = (l + r) / 2;
+  x.fillStyle = P.top; x.beginPath(); x.moveTo(l, base); x.lineTo(m, base - h); x.lineTo(m, base); x.fill();
+  x.fillStyle = P.side; x.beginPath(); x.moveTo(m, base); x.lineTo(m, base - h); x.lineTo(r, base); x.fill();
+}
+function facade(x, px, top, bw, bh, s, rnd, o) {
+  const gx = o.gx * s, gy = o.gy * s, ww = o.ww * s, wh = o.wh * s;
+  const cols = Math.max(1, Math.floor((bw - 4 * s) / gx));
+  const off = px + (bw - cols * gx) / 2 + (gx - ww) / 2;
+  for (let wy = top + (o.top || 8) * s; wy + wh < top + bh - 4 * s; wy += gy) {
+    if (o.chhajja) { x.fillStyle = "rgba(255,255,255,.07)"; x.fillRect(px + s, wy - 2.6 * s, bw - 2 * s, .8 * s); x.fillStyle = "rgba(0,0,0,.35)"; x.fillRect(px + s, wy - 1.8 * s, bw - 2 * s, 1 * s); }
+    for (let c = 0; c < cols; c++) {
+      const wx = off + c * gx, on = rnd() < o.density;
+      x.fillStyle = on ? litColor(rnd, o.alpha) : "rgba(0,0,0,.32)";
+      if (o.arch) {
+        x.beginPath(); x.moveTo(wx, wy + wh); x.lineTo(wx, wy + ww / 2);
+        x.arc(wx + ww / 2, wy + ww / 2, ww / 2, Math.PI, 0); x.lineTo(wx + ww, wy + wh); x.closePath(); x.fill();
+      } else x.fillRect(wx, wy, ww, wh);
+      if (on) { x.fillStyle = "rgba(0,0,0,.25)"; x.fillRect(wx, wy, ww, .7 * s); }
+      if (o.ac && rnd() < o.ac) { x.fillStyle = "rgba(255,255,255,.08)"; x.fillRect(wx + ww + .8 * s, wy + wh * .3, 3.4 * s, 2.6 * s); }
+    }
+  }
+}
+function toran(x, x0, x1, y, s) {
+  const span = 7 * s;
+  for (let a = x0; a < x1 - span / 2; a += span)
+    for (let k = 0; k <= 6; k++) {
+      const t = k / 6;
+      x.fillStyle = k % 2 ? "#c9701a" : "#e9a234";
+      x.beginPath(); x.arc(a + t * span, y + Math.sin(t * Math.PI) * 3 * s, .9 * s, 0, 7); x.fill();
+    }
+}
+function person(x, cx, base, s, h, pointing) {
+  x.fillStyle = CITY.ink;
+  x.beginPath(); x.arc(cx, base - h * s + 2.1 * s, 2.1 * s, 0, 7); x.fill();
+  x.beginPath(); x.moveTo(cx - 2.4 * s, base); x.lineTo(cx - 2 * s, base - h * s + 5 * s); x.quadraticCurveTo(cx, base - h * s + 3.4 * s, cx + 2 * s, base - h * s + 5 * s); x.lineTo(cx + 2.4 * s, base); x.fill();
+  if (pointing) { x.save(); x.translate(cx + 1.2 * s, base - h * s + 6 * s); x.rotate(-1.05); x.fillRect(0, -.6 * s, 6.5 * s, 1.2 * s); x.restore(); }
+}
+
+function drawCity(xs, w, h, gh, rnd) {
+  const L = [[], [], []], HOT = [], s = gh / 150, base = h, vx = w / 2;
+  const [xf, xm, xr] = xs;
+  const PF = CITY.L[0], PM = CITY.L[1], PR = CITY.L[2];
+
+  // ---- far layer: horizon glow, haze, distant towers
+  let g = xf.createLinearGradient(0, base - gh * 1.7, 0, base);
+  g.addColorStop(0, "rgba(255,140,70,0)"); g.addColorStop(.55, "rgba(255,140,70,.07)"); g.addColorStop(1, "rgba(255,160,90,.22)");
+  xf.fillStyle = g; xf.fillRect(0, base - gh * 1.7, w, gh * 1.7);
+  let px = -10;
+  xf.fillStyle = CITY.haze;
+  while (px < w + 10) {
+    const bw = (12 + rnd() * 26) * s, bh = gh * (.45 + rnd() * .45);
+    xf.fillRect(px, base - bh, bw, bh);
+    if (rnd() < .15) { xf.beginPath(); xf.arc(px + bw / 2, base - bh, bw * .35, Math.PI, 0); xf.fill(); }
+    px += bw;
+  }
+  const far = []; px = -20;
+  while (px < w + 20) {
+    const bw = (22 + rnd() * 34) * s, bh = gh * (.5 + rnd() * .42), X = px, crown = rnd(), beacon = rnd() < .3;
+    far.push({ cx: X + bw / 2, draw: () => {
+      const top = base - bh;
+      box(xf, X, top, bw, bh, PF, vx, s);
+      xf.fillStyle = PF.face;
+      if (crown < .3) { box(xf, X + bw * .2, top - 7 * s, bw * .6, 7 * s, PF, vx, s); }
+      if (beacon) { xf.fillStyle = PF.side; xf.fillRect(X + bw / 2 - .6 * s, top - 24 * s, 1.2 * s, 22 * s); L[0].push({ x: X + bw / 2, y: top - 24 * s, k: "beacon", p: rnd() * 6 }); }
+      for (let wy = top + 5 * s; wy < base - 6 * s; wy += 7 * s)
+        for (let wx = X + 3 * s; wx < X + bw - 4 * s; wx += 5 * s)
+          if (rnd() < .06) { xf.fillStyle = `rgba(255,${190 + Math.floor(rnd() * 30)},120,.3)`; xf.fillRect(wx, wy, 1.8 * s, 2.4 * s); }
+    } });
+    px += bw + (2 + rnd() * 6) * s;
+  }
+  far.sort((a, b) => Math.abs(b.cx - vx) - Math.abs(a.cx - vx)).forEach(o => o.draw());
+  g = xf.createLinearGradient(0, base - gh * 1.1, 0, base);
+  g.addColorStop(0, "rgba(70,35,95,0)"); g.addColorStop(1, "rgba(95,45,90,.5)");
+  xf.fillStyle = g; xf.fillRect(0, base - gh * 1.1, w, gh * 1.1);
+
+  // ---- mid layer: apartments, havelis and landmarks
+  const x = xm, P = PM, mid = [];
+  const plan = ["block", "haveli", "block", "temple", "block", "clock", "block", "gurudwara", "block", "mosque", "haveli", "block", "minar", "block", "dome"];
+  let i = Math.floor(rnd() * plan.length), jhalarLeft = 1; px = -10;
+  while (px < w + 10) {
+    const kind = plan[i++ % plan.length], X = px; let bw;
+    if (kind === "temple") {
+      bw = 78 * s;
+      mid.push({ cx: X + bw / 2, draw: () => {
+        const cx = X + bw / 2, mb = gh * .2, my = base - mb, sh = gh * .64, mw = bw - 12 * s, mx = X + 6 * s;
+        box(x, X, base - 6 * s, bw, 6 * s, P, vx, s, .8);
+        x.fillStyle = "rgba(255,170,95,.7)"; x.fillRect(mx + 2 * s, my + 2 * s, mw - 4 * s, mb - 9 * s);
+        for (let c = mx; c <= mx + mw - 2 * s; c += 6 * s) { x.fillStyle = P.face; x.fillRect(c, my, 2.4 * s, mb - 7 * s); x.fillStyle = "rgba(255,255,255,.07)"; x.fillRect(c, my, .6 * s, mb - 7 * s); }
+        box(x, mx - 2 * s, my - 3.5 * s, mw + 4 * s, 3.5 * s, P, vx, s, .6);
+        spire(x, cx - 17 * s, my - 3.5 * s, sh * .42, 10 * s, s, P);
+        spire(x, cx + 17 * s, my - 3.5 * s, sh * .42, 10 * s, s, P);
+        spire(x, cx, my - 3.5 * s, sh, 20 * s, s, P);
+        x.strokeStyle = "rgba(0,0,0,.28)"; x.lineWidth = .9 * s;
+        for (let k = 1; k < 9; k++) { const yy = my - 3.5 * s - sh * k / 9, half = 20 * s * (1 - k / 9 * .78); x.beginPath(); x.moveTo(cx - half, yy); x.lineTo(cx + half, yy); x.stroke(); }
+        const topY = my - 3.5 * s - sh;
+        x.fillStyle = sphereFill(x, cx, topY - 6.5 * s, 3.2 * s, P); x.beginPath(); x.ellipse(cx, topY - 6.5 * s, 2.8 * s, 3.2 * s, 0, 0, 7); x.fill();
+        x.fillStyle = P.side; x.fillRect(cx - .6 * s, topY - 28 * s, 1.2 * s, 22 * s);
+        x.fillStyle = "#b8562a"; x.beginPath(); x.moveTo(cx + .6 * s, topY - 28 * s); x.lineTo(cx + 14 * s, topY - 24 * s); x.lineTo(cx + .6 * s, topY - 20 * s); x.fill();
+        L[1].push({ x: cx, y: topY - 6.5 * s, k: "kalash", p: rnd() * 6 });
+        HOT.push({ z: 1, k: "temple", x: cx - 24 * s, y: topY - 28 * s, w: 48 * s, h: my - topY + 28 * s, fx: cx, fy: topY - 6.5 * s });
+        toran(x, mx, mx + mw, my + .5 * s, s);
+        for (let k = 0; k <= 10; k++) {
+          const t = k / 10, yy = bez(my - 3.5 * s, my - 3.5 * s - sh * .55, my - 3.5 * s - sh * .9, topY, t) - 1.2 * s;
+          const dx = bez(-20 * s, -21 * s, -11 * s, -4 * s, t);
+          L[1].push({ x: cx + dx - .8 * s, y: yy, k: "fairy", c: GOLD, p: k * .35 }, { x: cx - dx + .8 * s, y: yy, k: "fairy", c: GOLD, p: k * .35 });
+        }
+        for (let d = X + 6 * s; d < X + bw - 4 * s; d += 9 * s) L[1].push({ x: d, y: base - 7.5 * s, k: "diya", p: rnd() * 6 });
+      } });
+    } else if (kind === "haveli") {
+      bw = 74 * s;
+      mid.push({ cx: X + bw / 2, draw: () => {
+        const bh = gh * .5, top = base - bh;
+        box(x, X, top, bw, bh, P, vx, s);
+        x.fillStyle = P.face; for (let c = X + 3 * s; c < X + bw - 3 * s; c += 4.5 * s) x.fillRect(c, top - 3.2 * s, 2.2 * s, 3.2 * s);
+        chhatri(x, X + 10 * s, top - 3 * s, 12 * s, s, P); chhatri(x, X + bw - 10 * s, top - 3 * s, 12 * s, s, P);
+        facade(x, X + 2 * s, top + 5 * s, bw - 4 * s, bh - 5 * s, s, rnd, { gx: 11, gy: 17, ww: 5.5, wh: 9.5, density: .35, alpha: .8, arch: true });
+        for (const jx of [X + bw * .3, X + bw * .7]) {
+          const jy = top + bh * .36, jw = 14 * s;
+          box(x, jx - jw / 2, jy, jw, 11 * s, P, vx, s, .5);
+          x.fillStyle = P.side; x.beginPath(); x.moveTo(jx - jw / 2, jy + 11 * s); x.lineTo(jx, jy + 17 * s); x.lineTo(jx + jw / 2, jy + 11 * s); x.fill();
+          hemi(x, jx, jy - 2 * s, jw * .5, P);
+          x.fillStyle = litColor(rnd, .85);
+          for (let k = -1; k <= 1; k++) { const wx = jx + k * 4 * s - 1.3 * s; x.beginPath(); x.moveTo(wx, jy + 9 * s); x.lineTo(wx, jy + 4 * s); x.arc(wx + 1.3 * s, jy + 4 * s, 1.3 * s, Math.PI, 0); x.lineTo(wx + 2.6 * s, jy + 9 * s); x.fill(); }
+        }
+        toran(x, X + 1 * s, X + bw - 1 * s, top + .6 * s, s);
+        x.fillStyle = "rgba(255,185,110,.75)"; x.beginPath(); x.moveTo(X + bw / 2 - 5 * s, base); x.lineTo(X + bw / 2 - 5 * s, base - 12 * s); x.arc(X + bw / 2, base - 12 * s, 5 * s, Math.PI, 0); x.lineTo(X + bw / 2 + 5 * s, base); x.fill();
+        L[1].push({ x: X + bw / 2 - 8 * s, y: base - 2 * s, k: "diya", p: rnd() * 6 }, { x: X + bw / 2 + 8 * s, y: base - 2 * s, k: "diya", p: rnd() * 6 });
+      } });
+    } else if (kind === "gurudwara") {
+      bw = 90 * s;
+      mid.push({ cx: X + 36 * s, draw: () => {
+        const ww = 72 * s, cx = X + ww / 2, bb = gh * .3, bt = base - bb;
+        box(x, X + 4 * s, bt, ww - 8 * s, bb, P, vx, s);
+        facade(x, X + 4 * s, bt + 2 * s, ww - 8 * s, bb - 2 * s, s, rnd, { gx: 9, gy: 15, ww: 4.5, wh: 8, density: .6, alpha: .8, arch: true });
+        chhatri(x, X + 11 * s, bt - 1 * s, 11 * s, s, P); chhatri(x, X + ww - 11 * s, bt - 1 * s, 11 * s, s, P);
+        box(x, cx - 12 * s, bt - 9 * s, 24 * s, 9 * s, P, vx, s, .4);
+        onion(x, cx, bt - 9 * s, 14 * s, s, P);
+        for (let k = 0; k <= 8; k++) {
+          const t = k / 8, dx = bez(-14 * s, -18.2 * s, -2.8 * s, 0, t) - .9 * s, yy = bez(bt - 9 * s, bt - 24.4 * s, bt - 28.6 * s, bt - 37 * s, t) - 1.2 * s;
+          L[1].push({ x: cx + dx, y: yy, k: "fairy", c: GOLD, p: k * .45 }); if (k < 8) L[1].push({ x: cx - dx, y: yy, k: "fairy", c: GOLD, p: k * .45 });
+        }
+        const fx = X + ww + 4 * s, fh = gh * .78;
+        cylinder(x, fx, base - fh, .9 * s, fh, P);
+        x.fillStyle = "#c9702a"; x.beginPath(); x.moveTo(fx + .9 * s, base - fh); x.lineTo(fx + 15 * s, base - fh + 5 * s); x.lineTo(fx + .9 * s, base - fh + 10 * s); x.fill();
+      } });
+    } else if (kind === "mosque") {
+      bw = 80 * s;
+      mid.push({ cx: X + bw / 2, draw: () => {
+        const cx = X + bw / 2, bb = gh * .27, bt = base - bb, r = 17 * s;
+        box(x, X + 14 * s, bt, bw - 28 * s, bb, P, vx, s);
+        facade(x, X + 14 * s, bt, bw - 28 * s, bb, s, rnd, { gx: 9, gy: 14, ww: 4.5, wh: 8, density: .35, alpha: .7, arch: true });
+        onion(x, cx, bt - 1 * s, r, s, P);
+        for (const mx of [X + 8.5 * s, X + bw - 8.5 * s]) {
+          const mh = gh * .7;
+          cylinder(x, mx, base - mh, 2.6 * s, mh, P);
+          for (const f of [.74, .44]) { x.fillStyle = P.top; x.beginPath(); x.ellipse(mx, base - mh * f, 4.4 * s, 1.4 * s, 0, 0, 7); x.fill(); }
+          x.fillStyle = sphereFill(x, mx, base - mh, 3.4 * s, P); x.beginPath(); x.ellipse(mx, base - mh, 3.4 * s, 5 * s, 0, Math.PI, 0); x.fill();
+          x.fillStyle = P.side; x.fillRect(mx - .4 * s, base - mh - 9 * s, .8 * s, 5 * s);
+        }
+      } });
+    } else if (kind === "clock") {
+      bw = 30 * s;
+      mid.push({ cx: X + bw / 2, draw: () => {
+        const th = gh * .8, tt = base - th;
+        box(x, X + 4 * s, tt, bw - 8 * s, th, P, vx, s, .35);
+        pyramid(x, X + 2 * s, X + bw - 2 * s, tt - 1 * s, 24 * s, P);
+        x.fillStyle = P.side; x.fillRect(X + bw / 2 - .5 * s, tt - 31 * s, 1 * s, 7 * s);
+        L[1].push({ x: X + bw / 2, y: tt + 12 * s, k: "clock", p: 0, r: 6 * s });
+        HOT.push({ z: 1, k: "clock", x: X, y: tt - 30 * s, w: bw, h: th * .5 + 30 * s, fx: X + bw / 2, fy: tt + 12 * s });
+        facade(x, X + 4 * s, tt + 24 * s, bw - 8 * s, th - 24 * s, s, rnd, { gx: 7, gy: 12, ww: 3, wh: 6, density: .15, alpha: .5, arch: true });
+      } });
+    } else if (kind === "minar") {
+      bw = 28 * s;
+      mid.push({ cx: X + bw / 2, draw: () => {
+        const cx = X + bw / 2, mh = gh * .98;
+        const g2 = x.createLinearGradient(cx - 9 * s, 0, cx + 9 * s, 0);
+        g2.addColorStop(0, P.top); g2.addColorStop(.4, P.face); g2.addColorStop(1, P.side);
+        x.fillStyle = g2; x.beginPath(); x.moveTo(cx - 9 * s, base); x.lineTo(cx - 4.5 * s, base - mh); x.lineTo(cx + 4.5 * s, base - mh); x.lineTo(cx + 9 * s, base); x.fill();
+        x.strokeStyle = "rgba(0,0,0,.18)"; x.lineWidth = .7 * s;
+        for (let f = -.5; f <= .5; f += .25) { x.beginPath(); x.moveTo(cx + f * 18 * s, base); x.lineTo(cx + f * 9 * s, base - mh); x.stroke(); }
+        for (const f of [.3, .56, .8]) {
+          const hw = 9 * s - 4.5 * s * f + 2.8 * s, yy = base - mh * f;
+          x.fillStyle = P.side; x.beginPath(); x.ellipse(cx, yy, hw, 1.6 * s, 0, 0, Math.PI); x.fill();
+          x.fillStyle = P.top; x.beginPath(); x.ellipse(cx, yy - 1.4 * s, hw, 1.6 * s, 0, 0, 7); x.fill();
+        }
+        for (let b = -1; b <= 1; b++) L[1].push({ x: cx + b * 5 * s, y: base - mh * .56 - 2.4 * s, k: "fairy", c: GOLD, p: b });
+        chhatri(x, cx, base - mh, 9 * s, s, P);
+      } });
+    } else if (kind === "dome") {
+      bw = 58 * s;
+      mid.push({ cx: X + bw / 2, draw: () => {
+        const bb = gh * .34, bt = base - bb, cx = X + bw / 2;
+        box(x, X, bt, bw, bb, P, vx, s);
+        pyramid(x, X + 6 * s, X + bw - 6 * s, bt, 11 * s, P);
+        cylinder(x, cx, bt - 19 * s, 9 * s, 9 * s, P);
+        hemi(x, cx, bt - 19 * s, 10 * s, P);
+        x.fillStyle = P.side; x.fillRect(cx - .6 * s, bt - 35 * s, 1.2 * s, 6 * s);
+        for (let c = X + 5 * s; c < X + bw - 4 * s; c += 8 * s) { x.fillStyle = "rgba(255,200,120,.4)"; x.fillRect(c, bt + 8 * s, 3.2 * s, bb - 16 * s); x.fillStyle = "rgba(255,255,255,.08)"; x.fillRect(c - .8 * s, bt + 6 * s, 4.8 * s, 1.2 * s); }
+      } });
+    } else {
+      bw = (38 + rnd() * 34) * s;
+      const bh = gh * (.5 + rnd() * .42), stair = rnd() < .5, tankAt = rnd() < .6 ? rnd() : -1, balc = rnd() < .45, jh = jhalarLeft > 0 && rnd() < .35;
+      if (jh) jhalarLeft--;
+      mid.push({ cx: X + bw / 2, draw: () => {
+        const top = base - bh;
+        const b = box(x, X, top, bw, bh, P, vx, s);
+        facade(x, X, top, bw, bh, s, rnd, { gx: 9, gy: 13, ww: 4.6, wh: 6.2, density: .18, alpha: .75, chhajja: true, ac: .12 });
+        if (stair) { const rx = X + bw * (.15 + rnd() * .35); box(x, rx, top - 10 * s + b.dy * .3, 13 * s, 10 * s, P, vx, s, .4); x.fillStyle = litColor(rnd, .8); x.fillRect(rx + 3 * s, top - 7.5 * s + b.dy * .3, 3.6 * s, 7.5 * s); }
+        if (tankAt >= 0) cylinder(x, X + bw * (.6 + tankAt * .28), top - 10 * s - b.dy * .3, 6 * s, 9 * s, P);
+        if (balc) {
+          const bx = X + bw * (.18 + rnd() * .4), bwid = 14 * s;
+          for (let fy = top + 12 * s; fy < base - 12 * s; fy += 13 * s) {
+            x.fillStyle = "rgba(255,255,255,.09)"; x.fillRect(bx - s, fy + 6 * s, bwid + 2 * s, 1 * s);
+            x.fillStyle = "rgba(0,0,0,.35)"; for (let r = bx; r <= bx + bwid; r += 2.4 * s) x.fillRect(r, fy + 7 * s, .6 * s, 3.6 * s);
+            if (rnd() < .2) L[1].push({ x: bx + bwid * .5, y: fy + 3.6 * s, k: "star", c: Object.values(COLORS)[Math.floor(rnd() * 4)], p: rnd() * 6, r: 3.6 * s });
+          }
+        }
+        if (jh) {
+          const col = GOLD;
+          for (let sx = X + 3 * s, ci = 0; sx <= X + bw - 3 * s; sx += 6 * s, ci++) {
+            const len = bh * (.2 + rnd() * .3);
+            for (let yy = top + 3 * s, row = 0; yy < top + len; yy += 5 * s, row++) L[1].push({ x: sx, y: yy, k: "jhalar", c: col, row, p: ci * .4 });
+          }
+        }
+      } });
+    }
+    px += bw + (3 + rnd() * 5) * s;
+  }
+  mid.sort((a, b) => Math.abs(b.cx - vx) - Math.abs(a.cx - vx)).forEach(o => o.draw());
+
+  // ---- front layer: terraces right in front of you
+  const xr2 = xr, R = PR, front = [], roofs = []; px = -8;
+  while (px < w + 8) {
+    const X = px;
+    const bw = (34 + rnd() * 46) * s, bh = gh * (.14 + rnd() * .2), top = base - bh;
+    const feat = rnd(), dish = rnd() < .2, line = rnd() < .2, pots = rnd() < .3, people = rnd() < .24, win = rnd() < .45;
+    roofs.push({ x: X, w: bw, top });
+    front.push({ cx: X + bw / 2, draw: () => {
+      const b = box(xr2, X, top, bw, bh, R, vx, s, .7);
+      const floor = top - b.dy * .45, fx = b.dx * .45;
+      xr2.fillStyle = R.face; for (let m = X; m < X + bw - 2 * s; m += 6 * s) xr2.fillRect(m, top - 3 * s, 3 * s, 3 * s);
+      if (feat < .25) {
+        const rw = 14 * s, rx = X + bw * (.1 + rnd() * .4) + fx;
+        box(xr2, rx, floor - 12 * s, rw, 12 * s, R, vx, s, .5);
+        xr2.fillStyle = "rgba(255,185,110,.85)"; xr2.fillRect(rx + 4 * s, floor - 9 * s, 4.4 * s, 9 * s);
+      } else if (feat < .5) cylinder(xr2, X + bw * (.25 + rnd() * .5) + fx, floor - 11 * s, 6 * s, 9 * s, R);
+      if (dish) { xr2.strokeStyle = R.top; xr2.lineWidth = 1.5 * s; xr2.beginPath(); xr2.arc(X + bw * .82 + fx, floor - 8 * s, 5 * s, Math.PI * .9, Math.PI * 1.9); xr2.stroke(); xr2.fillStyle = R.side; xr2.fillRect(X + bw * .82 + fx - .6 * s, floor - 8 * s, 1.2 * s, 8 * s); }
+      if (line) {
+        const a = X + bw * .15 + fx, c = X + bw * .7 + fx;
+        xr2.fillStyle = R.side; xr2.fillRect(a, floor - 10 * s, 1 * s, 10 * s); xr2.fillRect(c, floor - 10 * s, 1 * s, 10 * s);
+        xr2.strokeStyle = R.top; xr2.lineWidth = .6 * s; xr2.beginPath(); xr2.moveTo(a, floor - 9.5 * s); xr2.quadraticCurveTo((a + c) / 2, floor - 7 * s, c, floor - 9.5 * s); xr2.stroke();
+        const cloth = ["#3a2c5c", "#4a2a48", "#2a3a5a"];
+        for (let k = 0, cc = a + 4 * s; cc < c - 4 * s; cc += 7 * s, k++) { xr2.fillStyle = cloth[k % 3]; xr2.fillRect(cc, floor - 8.6 * s, (3 + rnd() * 2) * s, (4 + rnd() * 3) * s); }
+      }
+      if (pots) for (let k = 0; k < 2 + Math.floor(rnd() * 2); k++) {
+        const ppx = X + 4 * s + rnd() * (bw - 10 * s) + fx;
+        xr2.fillStyle = "#3a1f2a"; xr2.fillRect(ppx, floor - 3.5 * s, 4 * s, 3.5 * s);
+        xr2.fillStyle = "#14241f"; xr2.beginPath(); xr2.arc(ppx + 2 * s, floor - 5.5 * s, 3.4 * s, 0, 7); xr2.fill();
+      }
+      if (people) { const cx = X + bw * (.3 + rnd() * .4) + fx; person(xr2, cx, floor, s, 15, false); const kid = rnd() < .7; if (kid) person(xr2, cx + 6 * s, floor, s, 10, true); HOT.push({ z: 2, k: "person", x: cx - 6 * s, y: floor - 17 * s, w: (kid ? 16 : 12) * s, h: 17 * s, fx: cx, fy: floor - 9 * s }); }
+      if (win) { xr2.fillStyle = litColor(rnd, .85); xr2.fillRect(X + bw * (.2 + rnd() * .5), top + bh * .35, 5 * s, 7 * s); }
+      for (let d = X + 3 * s; d < X + bw - 2 * s; d += 9 * s) if (rnd() < .4) L[2].push({ x: d + 1.5 * s, y: top - 4.6 * s, k: "diya", p: rnd() * 6 });
+    } });
+    px += bw + (rnd() < .35 ? 6 * s : 0);
+  }
+  front.sort((a, b) => Math.abs(b.cx - vx) - Math.abs(a.cx - vx)).forEach(o => o.draw());
+  xr2.strokeStyle = "rgba(6,4,20,.9)"; xr2.lineWidth = .8 * s;
+  for (let k = 0; k < roofs.length - 1; k++) {
+    if (rnd() > .3) continue;
+    const a = roofs[k], b = roofs[k + 1];
+    const x1 = a.x + a.w * .55, y1 = a.top - 9 * s, x2 = b.x + b.w * .45, y2 = b.top - 9 * s, sag = (8 + rnd() * 10) * s;
+    const cmx = (x1 + x2) / 2, cmy = (y1 + y2) / 2 + sag * 2;
+    xr2.fillStyle = CITY.ink; xr2.fillRect(x1 - .5 * s, y1, 1 * s, 9 * s); xr2.fillRect(x2 - .5 * s, y2, 1 * s, 9 * s);
+    xr2.beginPath(); xr2.moveTo(x1, y1); xr2.quadraticCurveTo(cmx, cmy, x2, y2); xr2.stroke();
+    const n = Math.max(3, Math.floor((x2 - x1) / (8 * s))), off = Math.floor(rnd() * 5);
+    for (let j = 1; j < n; j++) {
+      const t = j / n, bx = (1 - t) * (1 - t) * x1 + 2 * (1 - t) * t * cmx + t * t * x2, by = (1 - t) * (1 - t) * y1 + 2 * (1 - t) * t * cmy + t * t * y2;
+      L[2].push({ x: bx, y: by + 1.5 * s, k: "fairy", c: FAIRY[(j + off) % FAIRY.length], p: j * .9 });
+    }
+  }
+  xr2.fillStyle = R.side; xr2.fillRect(0, base - 2 * s, w, 2 * s);
+  return { lights: L, hot: HOT, s };
+}
+function starPath(x, cx, cy, r) {
+  x.beginPath();
+  for (let i = 0; i < 10; i++) { const a = -Math.PI / 2 + i * Math.PI / 5, rr = i % 2 ? r * .45 : r; x.lineTo(cx + Math.cos(a) * rr, cy + Math.sin(a) * rr); }
+  x.closePath();
+}
+function drawCityLights(x, city, t, oy, z, ox) {
+  const s = city.s;
+  for (const L of city.lights[z]) {
+    const y = L.y + oy, lx = L.x + ox;
+    if (L.k === "diya") {
+      const a = .7 + .3 * Math.sin(t * 5 + L.p) * Math.sin(t * 2.7 + L.p * 2);
+      x.globalAlpha = a; x.drawImage(glow("#ffb04a"), lx - 7 * s, y - 7 * s, 14 * s, 14 * s);
+      x.globalAlpha = 1; x.fillStyle = "#fff3c4"; x.fillRect(lx - .8 * s, y - 1.4 * s, 1.6 * s, 2 * s);
+    } else if (L.k === "fairy") {
+      const a = .35 + .65 * (.5 + .5 * Math.sin(t * 2.2 + L.p));
+      x.globalAlpha = a; x.drawImage(glow(L.c), lx - 5 * s, y - 5 * s, 10 * s, 10 * s);
+      x.globalAlpha = Math.min(1, a + .2); x.fillStyle = L.c; x.fillRect(lx - .7 * s, y - .7 * s, 1.4 * s, 1.4 * s);
+    } else if (L.k === "jhalar") {
+      const a = .3 + .7 * Math.max(0, Math.sin(t * 2.6 - L.row * .65 + L.p));
+      x.globalAlpha = a * .7; x.drawImage(glow(L.c), lx - 3.6 * s, y - 3.6 * s, 7.2 * s, 7.2 * s);
+      x.globalAlpha = .45 + .55 * a; x.fillStyle = L.c; x.fillRect(lx - .6 * s, y - .6 * s, 1.2 * s, 1.2 * s);
+    } else if (L.k === "star") {
+      const a = .8 + .2 * Math.sin(t * 1.5 + L.p), sw = Math.sin(t * .8 + L.p) * .08;
+      x.globalAlpha = a * .8; x.drawImage(glow(L.c), lx - 14 * s, y - 14 * s, 28 * s, 28 * s);
+      x.save(); x.translate(lx, y); x.rotate(sw); x.globalAlpha = 1;
+      starPath(x, 0, 0, L.r); x.fillStyle = L.c; x.fill();
+      starPath(x, 0, 0, L.r * .45); x.fillStyle = "#fff3d6"; x.fill();
+      x.fillStyle = L.c; for (let k = -1; k <= 1; k++) x.fillRect(k * 1.6 * s - .3 * s, L.r * .7, .6 * s, 6 * s);
+      x.restore();
+    } else if (L.k === "beacon") {
+      x.globalAlpha = Math.sin(t * 2 + L.p) > .6 ? .95 : .15; x.fillStyle = "#ff5a4a"; x.fillRect(lx - 1 * s, y - 1 * s, 2 * s, 2 * s);
+    } else if (L.k === "clock") {
+      x.globalAlpha = .5; x.drawImage(glow("#ffe0a0"), lx - L.r * 3, y - L.r * 3, L.r * 6, L.r * 6);
+      x.globalAlpha = 1; x.fillStyle = "#ffe9be"; x.beginPath(); x.arc(lx, y, L.r, 0, 7); x.fill();
+      x.strokeStyle = "#5a3a1a"; x.lineWidth = .8 * s; x.beginPath(); x.moveTo(lx, y); x.lineTo(lx, y - L.r * .7); x.moveTo(lx, y); x.lineTo(lx + L.r * .5, y + L.r * .2); x.stroke();
+    } else if (L.k === "kalash") {
+      x.globalAlpha = .7 + .2 * Math.sin(t * 3 + L.p); x.drawImage(glow("#ffc35a"), lx - 10 * s, y - 10 * s, 20 * s, 20 * s);
+    }
+  }
+  x.globalAlpha = 1;
+}
+
+/* ---------- fireworks: slow, distant, unhurried ---------- */
+const FW = [["#ff4d6d", "#ffd1da"], ["#ffcf4a", "#fff4c8"], ["#5cf0a0", "#dcffe9"], ["#5aa8ff", "#dcebff"], ["#ff7ae0", "#ffe0f7"], ["#ff9a3c", "#ffe3c4"], ["#b38cff", "#efe6ff"]];
+const rockets = [], parts = [], flashes = [];
+let fwNext = 2.5, lastTapFw = 0;
+function fwLaunch(tx, ty, quick) {
+  const sx = tx + rand(-30, 30), sy = H - lift - groundH * .45;
+  rockets.push({ sx, sy, tx, ty, t: 0, T: quick ? rand(1, 1.2) : rand(1.7, 2.3), trail: [], sc: quick ? 1 : rand(.6, 1) });
+}
+function fwBurst(x, y, sc) {
+  if (parts.length > 1400) return;
+  const pal = FW[Math.floor(Math.random() * FW.length)];
+  const type = ["peony", "peony", "chrys", "willow", "ring", "palm", "crackle"][Math.floor(Math.random() * 7)];
+  const n = Math.round((reduced ? 34 : 80) * sc + 22), sp = (70 + 35 * Math.random()) * sc;
+  const add = (vx, vy, c, life, drag, g, w, extra) => parts.push(Object.assign({ x, y, vx, vy, c, life, max: life, drag, g, w }, extra));
+  if (type === "ring") {
+    const tilt = rand(.35, 1), rot = rand(0, Math.PI), cr = Math.cos(rot), sr = Math.sin(rot);
+    for (let i = 0; i < n; i++) { const a = i / n * Math.PI * 2, vx = Math.cos(a) * sp, vy = Math.sin(a) * sp * tilt; add(vx * cr - vy * sr, vx * sr + vy * cr, pal[0], 3.2, 1.05, 9, 1.6 * sc + .6); }
+  } else if (type === "willow") {
+    for (let i = 0; i < n; i++) { const a = Math.random() * Math.PI * 2, v = sp * Math.sqrt(Math.random()) * .95; add(Math.cos(a) * v, Math.sin(a) * v, "#ffc861", 4.4, 1.5, 14, 1.3 * sc + .5, { tail: .25 }); }
+  } else if (type === "palm") {
+    for (let i = 0; i < 9; i++) { const a = i / 9 * Math.PI * 2 + rand(-.1, .1); for (let j = 0; j < 6; j++) add(Math.cos(a) * sp * (.8 + j * .05), Math.sin(a) * sp * (.8 + j * .05) - 6, j < 2 ? "#fff2c8" : "#ffb347", 3.6, 1.2, 15, 2 * sc + .6, { tail: .14 }); }
+  } else {
+    for (let i = 0; i < n; i++) { const a = Math.random() * Math.PI * 2, v = sp * (.6 + Math.random() * .4); add(Math.cos(a) * v, Math.sin(a) * v, pal[0], 3 + Math.random() * .8, 1.1, 10, 1.6 * sc + .6, { crackle: type === "crackle" }); }
+    if (type === "chrys") for (let i = 0; i < n * .5; i++) { const a = Math.random() * Math.PI * 2, v = sp * .45 * (.6 + Math.random() * .4); add(Math.cos(a) * v, Math.sin(a) * v, pal[1], 2.6, 1.3, 10, 1.4 * sc + .5); }
+  }
+  if (!reduced) flashes.push({ x, y, r: 140 * sc, c: pal[0], life: .7, max: .7 });
+  Music.boom(sc, type === "crackle" || type === "willow");
+}
+function fwTick(dt) {
+  fwNext -= dt;
+  if (fwNext <= 0 && !document.hidden) {
+    const pair = Math.random() < .15 ? 2 : 1;
+    for (let i = 0; i < pair; i++) fwLaunch(rand(W * .1, W * .9), rand(H * .1, Math.max(H * .2, H - lift - groundH - H * .1)), false);
+    fwNext = reduced ? rand(9, 13) : rand(6, 10);
+  }
+  ctx.save(); ctx.globalCompositeOperation = "lighter";
+  for (let i = flashes.length - 1; i >= 0; i--) {
+    const f = flashes[i]; f.life -= dt;
+    if (f.life <= 0) { flashes.splice(i, 1); continue; }
+    ctx.globalAlpha = .22 * f.life / f.max; ctx.drawImage(glow(f.c), f.x - f.r, f.y - f.r, f.r * 2, f.r * 2);
+  }
+  for (let i = rockets.length - 1; i >= 0; i--) {
+    const r = rockets[i]; r.t += dt;
+    const p = Math.min(1, r.t / r.T), e = 1 - Math.pow(1 - p, 2.4);
+    const x = r.sx + (r.tx - r.sx) * e + Math.sin(r.t * 12) * .6, y = r.sy + (r.ty - r.sy) * e;
+    r.trail.push(x, y); if (r.trail.length > 24) r.trail.splice(0, 2);
+    ctx.fillStyle = "#ffd59a";
+    for (let k = 0; k < r.trail.length - 2; k += 2) { ctx.globalAlpha = (k / r.trail.length) * .7; ctx.fillRect(r.trail[k] - .7, r.trail[k + 1] - .7, 1.4, 1.4); }
+    ctx.globalAlpha = 1; ctx.fillStyle = "#fff4d6"; ctx.fillRect(x - 1.1, y - 1.1, 2.2, 2.2);
+    if (p >= 1) { rockets.splice(i, 1); fwBurst(x, y, r.sc); }
+  }
+  ctx.lineCap = "round";
+  for (let i = parts.length - 1; i >= 0; i--) {
+    const q = parts[i]; q.life -= dt;
+    if (q.life <= 0) {
+      if (q.crackle && Math.random() < .5) for (let k = 0; k < 2; k++) parts.push({ x: q.x, y: q.y, vx: rand(-20, 20), vy: rand(-20, 20), c: "#ffffff", life: .3, max: .3, drag: 2, g: 0, w: 1 });
+      parts.splice(i, 1); continue;
+    }
+    const d = Math.exp(-q.drag * dt); q.vx *= d; q.vy = q.vy * d + q.g * dt;
+    q.x += q.vx * dt; q.y += q.vy * dt;
+    let a = Math.pow(q.life / q.max, 1.1); if (q.life < q.max * .25 && Math.random() < .3) a *= .35;
+    const tl = q.tail || .08;
+    ctx.globalAlpha = a; ctx.strokeStyle = q.c; ctx.lineWidth = q.w;
+    ctx.beginPath(); ctx.moveTo(q.x - q.vx * tl, q.y - q.vy * tl); ctx.lineTo(q.x, q.y); ctx.stroke();
+  }
+  ctx.restore();
+}
+
+
+function seeded(seed) { let s = seed; return () => (s = (s * 16807) % 2147483647) / 2147483647; }
+
+function resize() {
+  DPR = Math.min(2, window.devicePixelRatio || 1);
+  W = innerWidth; H = innerHeight;
+  cv.width = W * DPR; cv.height = H * DPR;
+  groundH = Math.max(140, Math.min(260, H * .28));
+  const r = seeded(7);
+  stars = Array.from({ length: Math.round(W * H / 2600) }, () => ({ x: r() * W, y: r() * H * .8, s: r() < .1 ? 1.6 : 1, p: r() * 6, a: .3 + r() * .6 }));
+  lift = Math.round(Math.min(120, H * .12));
+  cityH = Math.ceil(groundH * 1.7);
+  $("hint").style.bottom = (groundH + lift + 12) + "px";
+  const lw = W + 2 * CM;
+  const layers = [0, 1, 2].map(() => { const c = document.createElement("canvas"); c.width = Math.ceil(lw * DPR); c.height = Math.ceil(cityH * DPR); c.getContext("2d").scale(DPR, DPR); return c; });
+  const built = drawCity(layers.map(c => c.getContext("2d")), lw, cityH, groundH, seeded(42));
+  city = { layers, lights: built.lights, hot: built.hot, s: built.s };
+  const target = Math.max(4, Math.min(34, Math.round(W * H / 15000)));
+  syncLanternCount(target);
+}
+
+function nextWish() {
+  if (!wishes.length) return null;
+  const onScreen = new Set(lanterns.map(l => l.wish && l.wish.id));
+  for (let i = 0; i < wishes.length; i++) {
+    const w = wishes[cursor++ % wishes.length];
+    if (!onScreen.has(w.id) && !reported.has(w.id)) return w;
+  }
+  return null;
+}
+function spawn(w, initial) {
+  const depth = rand(.35, 1);
+  return { wish: w, depth, x0: rand(20, W - 20), y: initial ? rand(H * .05, H - groundH) : H + rand(40, 220),
+    speed: (8 + 16 * depth) * (reduced ? .35 : 1), amp: rand(8, 22), f: rand(.08, .2), ph: rand(0, 6), fl: rand(2, 5), paused: false, boost: 0 };
+}
+let maxLanterns = 20;
+function syncLanternCount(target) {
+  if (target) maxLanterns = target;
+  const want = Math.min(maxLanterns, wishes.filter(w => !reported.has(w.id)).length);
+  while (lanterns.length < want) { const w = nextWish(); if (!w) break; lanterns.push(spawn(w, true)); }
+  if (lanterns.length > want) lanterns.length = want;
+  $("empty").hidden = wishes.length > 0;
+}
+
+let last = performance.now();
+function frame(now) {
+  const dt = Math.min(.05, (now - last) / 1000); last = now; const t = now / 1000;
+  ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
+  ctx.clearRect(0, 0, W, H);
+  // stars
+  for (const s of stars) { ctx.globalAlpha = s.a * (.6 + .4 * Math.sin(t * 1.3 + s.p)); ctx.fillStyle = "#fff"; ctx.fillRect(s.x, s.y, s.s, s.s); }
+  ctx.globalAlpha = 1;
+  shootTick(dt);
+  // fireworks, behind the lanterns and the city
+  fwTick(dt);
+  // lanterns, far first
+  lanterns.sort((a, b) => a.depth - b.depth);
+  for (const l of lanterns) {
+    if (!l.paused) {
+      const v = (l === demo ? l.speed * .3 : l.speed) + l.boost; l.y -= v * dt; l.boost *= Math.pow(.35, dt);
+    }
+    if (l.y < -120) {
+      if (l === demo) demo = null;
+      const w = nextWish(); if (w) Object.assign(l, spawn(w, false)); else l.y = H + rand(40, 200);
+    }
+    const sp = SPRITES[l.wish.color] || SPRITES.saffron;
+    const k = l.depth * .62;
+    const x = l.x0 + Math.sin(t * l.f + l.ph) * l.amp * l.depth;
+    l.x = x;
+    const flick = .82 + .12 * Math.sin(t * l.fl + l.ph) + .06 * Math.sin(t * 13 + l.ph);
+    ctx.globalAlpha = Math.min(1, (.35 + .65 * l.depth) * flick);
+    const lc = l.wish.light_count || 0;
+    if (lc > 0 || l.flash > 0) {
+      l.flash = Math.max(0, (l.flash || 0) - dt * .5);
+      const gk = Math.min(1, Math.log10(1 + lc) / 2) + l.flash, R = (60 + 50 * gk) * k;
+      const a0 = ctx.globalAlpha; ctx.globalAlpha = Math.min(1, .2 + .35 * gk);
+      ctx.drawImage(glow(COLORS[l.wish.color] || COLORS.saffron), x - R, l.y - R * .9, R * 2, R * 2); ctx.globalAlpha = a0;
+    }
+    ctx.drawImage(sp.c, x - sp.w * k / 2, l.y - sp.anchorY * k, sp.w * k, sp.h * k);
+    if (l.gift && !l.wish.mine) {
+      ctx.globalAlpha = .95; ctx.fillStyle = "#ffe7a8"; ctx.font = "600 13px Figtree, sans-serif"; ctx.textAlign = "center";
+      ctx.fillText(l.wish.for_name ? "for " + l.wish.for_name : "for you", x, l.y - 46 * k - 8);
+    }
+    if (l === selected) {
+      ctx.globalAlpha = .9; ctx.strokeStyle = "rgba(255,231,168,.8)"; ctx.lineWidth = 1.5;
+      ctx.beginPath(); ctx.arc(x, l.y, 46 * k + 6 * Math.sin(t * 3), 0, 7); ctx.stroke();
+    }
+    if (l === demo) {
+      const pr = (t * .9) % 1;
+      ctx.globalAlpha = .9 * (1 - pr); ctx.strokeStyle = "#ffe7a8"; ctx.lineWidth = 2;
+      ctx.beginPath(); ctx.arc(x, l.y, (28 + 34 * pr) * k + 10, 0, 7); ctx.stroke();
+      ctx.globalAlpha = 1; ctx.fillStyle = "#ffe7a8"; ctx.font = "600 13px Figtree, sans-serif"; ctx.textAlign = "center";
+      ctx.fillText("Tap me", x, l.y + 52 * k + 16);
+    }
+    if (l.wish.mine) {
+      ctx.globalAlpha = .9; ctx.fillStyle = "#ffe7a8"; ctx.font = "500 12px Figtree, sans-serif"; ctx.textAlign = "center";
+      ctx.fillText("your lantern", x, l.y - 46 * k - 8);
+    }
+  }
+  ctx.globalAlpha = 1;
+  // launch sparks
+  for (let i = sparks.length - 1; i >= 0; i--) {
+    const p = sparks[i]; p.life -= dt; p.x += p.vx * dt; p.y += p.vy * dt; p.vy += 20 * dt;
+    if (p.life <= 0) { sparks.splice(i, 1); continue; }
+    ctx.globalAlpha = p.life / p.max; ctx.fillStyle = "#ffd08a"; ctx.fillRect(p.x, p.y, 2, 2);
+  }
+  ctx.globalAlpha = 1;
+  // city + lights
+  const oy = H - cityH - lift; city.oy = oy; city.ox = city.ox || [0, 0, 0];
+  for (let z = 0; z < 3; z++) {
+    const ox = -CM; city.ox[z] = ox;
+    ctx.drawImage(city.layers[z], ox, oy, W + 2 * CM, cityH);
+    drawCityLights(ctx, city, t, oy, z, ox);
+  }
+  ctx.fillStyle = CITY.L[2].side; ctx.fillRect(0, H - lift - 1, W, lift + 1);
+  fxTick(dt);
+  for (const l of lanterns) if (l.wish.mine && !l.paused && l.boost > 5 && Math.random() < .5)
+    sparks.push({ x: l.x + rand(-6, 6), y: l.y + 30, vx: rand(-10, 10), vy: rand(10, 40), life: 1.2, max: 1.2 });
+  requestAnimationFrame(frame);
+}
+
+/* ---------- send light ---------- */
+let pendingGuide = false;
+function renderLight(w) {
+  const btn = $("lightBtn"), n = w.light_count || 0;
+  $("lightHelp").hidden = w.mine || lsGet("skyw-lit-once", false);
+  if (w.mine) {
+    btn.hidden = true;
+    const r = w.read_count || 0;
+    $("lightN").textContent = (r || n) ? `Read by ${r.toLocaleString("en-IN")} ${r === 1 ? "person" : "people"} · ${n.toLocaleString("en-IN")} sent light` : "Your lantern is out in everyone's sky";
+    return;
+  }
+  btn.hidden = false;
+  const done = lit.has(w.id);
+  btn.classList.toggle("done", done); btn.setAttribute("aria-pressed", String(done));
+  $("lightLabel").textContent = done ? "You sent light" : "Send light";
+  $("lightN").textContent = n ? `${n.toLocaleString("en-IN")} ${n === 1 ? "person has" : "people have"} sent light` : "Be the first to send light";
+}
+async function sendLight() {
+  const l = selected; if (!l) return; const w = l.wish;
+  if (w.mine || lit.has(w.id)) return;
+  lit.add(w.id); lsSet("skyw-lit", [...lit].slice(-400));
+  w.light_count = (w.light_count || 0) + 1; l.flash = 1;
+  for (let k = 0; k < 16; k++) sparks.push({ x: l.x + rand(-12, 12), y: l.y + rand(-14, 16), vx: rand(-28, 28), vy: rand(-70, -25), life: 1.5, max: 1.5 });
+  const firstTime = !lsGet("skyw-lit-once", false);
+  lsSet("skyw-lit-once", true);
+  Music.light(); renderLight(w);
+  if (firstTime) toast("Your light is on its way. Their lantern glows a little brighter now.");
+  try { navigator.vibrate && navigator.vibrate(12); } catch (e) {}
+  if (LIVE && isUuid(w.id)) store.light(w.id).catch(() => {});
+}
+$("lightBtn").onclick = sendLight;
+
+/* ---------- interaction ---------- */
+let downAt = null;
+cv.addEventListener("pointerdown", e => downAt = { x: e.clientX, y: e.clientY });
+cv.addEventListener("pointerup", e => {
+  if (!downAt || Math.hypot(e.clientX - downAt.x, e.clientY - downAt.y) > 12) return;
+  let best = null, bd = Infinity;
+  for (const l of lanterns) {
+    const k = l.depth * .62, r = 48 * k + 14;
+    const d = Math.hypot(e.clientX - l.x, e.clientY - l.y);
+    if (d < r && (d - l.depth * 20) < bd) { bd = d - l.depth * 20; best = l; }
+  }
+  if (best) openCard(best);
+  else if (catchStar(e.clientX, e.clientY)) {}
+  else if (hitCity(e.clientX, e.clientY)) tapCity(hitCity(e.clientX, e.clientY));
+  else if (e.clientY < H - lift - groundH * .7 && performance.now() - lastTapFw > 250) { lastTapFw = performance.now(); fwLaunch(e.clientX, e.clientY, true); hideHint(); }
+});
+
+function openCard(l) {
+  if (selected) selected.paused = false;
+  selected = l; l.paused = true; demo = null; Music.chime();
+  const w = l.wish, c = $("card");
+  c.style.setProperty("--pc", COLORS[w.color] || COLORS.saffron);
+  $("cardWho").textContent = (w.mine ? "You wrote" : w.sample ? "Sample lantern" : "Someone wrote") + (w.for_name ? " for " + w.for_name : "");
+  renderLight(w);
+  if (!w.mine && !w.sample && LIVE && isUuid(w.id) && !readSet.has(w.id)) {
+    readSet.add(w.id); lsSet("skyw-read", [...readSet].slice(-400));
+    w.read_count = (w.read_count || 0) + 1;
+    store.read(w.id, lsGet("skyw-city", null)).catch(() => {});
+  }
+  $("cardWish").textContent = w.text;
+  $("cardMeta").textContent = [w.city, timeAgo(w.created_at)].filter(Boolean).join(" · ");
+  $("reportBtn").hidden = !!w.mine || !!w.sample;
+  if (w.sample) $("cardMeta").textContent = "An example wish, shown until the sky fills up";
+  $("cardRow").hidden = false; $("confirmRow").hidden = true;
+  showScrim(closeCard);
+  c.hidden = false; requestAnimationFrame(() => c.classList.add("show"));
+  $("letGo").focus({ preventScroll: true });
+  hideHint();
+}
+function closeCard() {
+  if (pendingGuide) { pendingGuide = false; setTimeout(openGuide, 700); }
+  const c = $("card"); c.classList.remove("show");
+  setTimeout(() => c.hidden = true, 300);
+  if (selected) { selected.paused = false; selected.boost = 10; selected = null; }
+  hideScrim();
+}
+$("letGo").onclick = closeCard;
+$("reportBtn").onclick = () => { $("cardRow").hidden = true; $("confirmRow").hidden = false; };
+$("reportYes").onclick = async () => {
+  const l = selected; if (!l) return;
+  try { await store.report(l.wish.id); } catch (e) {}
+  toast("Reported. Thank you.");
+  const id = l.wish.id;
+  closeCard();
+  const w = nextWish(); if (w) Object.assign(l, spawn(w, false)); else lanterns.splice(lanterns.indexOf(l), 1);
+  wishes = wishes.filter(x => x.id !== id);
+};
+$("readRandom").onclick = () => {
+  const pool = lanterns.filter(l => !l.wish.mine && l.y > 60 && l.y < H - groundH);
+  if (!pool.length) return toast("No lanterns nearby yet. Give it a moment.");
+  openCard(pool[Math.floor(Math.random() * pool.length)]);
+};
+
+let scrimClose = null;
+function showScrim(onClose) { const s = $("scrim"); scrimClose = onClose; s.hidden = false; requestAnimationFrame(() => s.classList.add("show")); }
+function hideScrim() { const s = $("scrim"); s.classList.remove("show"); setTimeout(() => { if (!s.classList.contains("show")) s.hidden = true; }, 300); }
+$("scrim").onclick = () => scrimClose && scrimClose();
+document.addEventListener("keydown", e => { if (e.key === "Escape" && scrimClose) scrimClose(); });
+
+function openSheet(id) { const s = $(id); s.hidden = false; requestAnimationFrame(() => s.classList.add("show")); showScrim(() => closeSheet(id)); }
+function closeSheet(id) { if (id === "writeSheet") { if (!launching) Music.duck(false); setTimeout(L3.stop, 500); } const s = $(id); s.classList.remove("show"); setTimeout(() => s.hidden = true, 450); hideScrim(); }
+document.querySelectorAll("[data-close]").forEach(b => b.onclick = () => closeSheet(b.closest(".sheet").id));
+
+function hideHint() { $("hint").classList.add("off"); }
+setTimeout(hideHint, 9000);
+
+/* ---------- write + fold + light ---------- */
+let pickColor = "saffron";
+$("swatches").innerHTML = Object.keys(COLORS).map(k =>
+  `<label class="swatch" style="--c:${COLORS[k]}"><input type="radio" name="col" value="${k}" ${k === pickColor ? "checked" : ""} id="col-${k}"><span><i></i>${COLOR_NAMES[k]}</span></label>`).join("");
+$("swatches").addEventListener("change", e => pickColor = e.target.value);
+$("wish").addEventListener("input", () => {
+  const v = $("wish").value; $("counter").textContent = v.length + "/140";
+  $("toFold").disabled = v.trim().length < 3; $("wErr").hidden = true;
+});
+$("openWrite").onclick = () => {
+  const lastAt = lsGet("kandil-last", 0);
+  if (Date.now() - lastAt < 60000) return toast("Wait a minute, your last lantern is still rising.");
+  $("stepWrite").hidden = false; $("stepFold").hidden = true; $("stepWrite").style.display = "flex";
+  if (!$("city").value) $("city").value = lsGet("skyw-city", "") || "";
+  openSheet("writeSheet"); setTimeout(() => $("wish").focus(), 450); hideHint();
+};
+$("toFold").onclick = () => {
+  const text = $("wish").value.trim(), city = $("city").value.trim(), forName = $("forName").value.trim();
+  const bad = checkWish(text) || (forName ? checkWish(forName + " ok") : "") || (city ? checkWish(city + " ok") : "");
+  if (bad) { $("wErr").textContent = bad; $("wErr").hidden = false; return; }
+  $("stepWrite").style.display = "none"; $("stepFold").hidden = false;
+  const lw = $("lw"); lw.classList.remove("folded"); lw.style.setProperty("--lit", 0);
+  lw.style.setProperty("--pc", COLORS[pickColor]);
+  $("ptext").textContent = text;
+  $("fTitle").textContent = "Folding your lantern"; $("fLead").textContent = "Folding your wish into a lantern…";
+  $("hold").disabled = true; $("fErr").hidden = true; $("holdLabel").textContent = "Light the diya: press and hold";
+  L3.start(COLORS[pickColor]);
+  setTimeout(() => { lw.classList.add("folded"); L3.fold(); }, 700);
+  Music.duck(true); Music.fold();
+  setTimeout(() => {
+    $("fTitle").textContent = "Now light the diya";
+    $("fLead").textContent = "Press and hold the button until the lantern glows fully.";
+    $("hold").disabled = false;
+  }, 1900);
+};
+$("backWrite").onclick = () => { Music.duck(false); L3.stop(); $("stepFold").hidden = true; $("stepWrite").style.display = "flex"; };
+
+let holdP = 0, holding = false, holdRaf = null, launching = false;
+function holdTick(prev) {
+  const now = performance.now(), dt = (now - prev) / 1000;
+  holdP = Math.max(0, Math.min(1, holdP + (holding ? dt / 1.6 : -dt * 1.5)));
+  $("hold").style.setProperty("--p", holdP);
+  $("lw").style.setProperty("--lit", holdP);
+  if (holdP >= 1 && !launching) { launching = true; holding = false; Music.holdEnd(true); return release(); }
+  if (holding || holdP > 0) holdRaf = requestAnimationFrame(() => holdTick(now)); else holdRaf = null;
+}
+function startHold() { if ($("hold").disabled || launching) return; holding = true; Music.holdStart(); try { navigator.vibrate && navigator.vibrate(10); } catch (e) {} if (!holdRaf) holdRaf = requestAnimationFrame(() => holdTick(performance.now())); }
+function endHold() { holding = false; if (!launching) Music.holdEnd(false); }
+const hb = $("hold");
+hb.addEventListener("pointerdown", e => { e.preventDefault(); hb.setPointerCapture && hb.setPointerCapture(e.pointerId); startHold(); });
+["pointerup", "pointercancel", "lostpointercapture"].forEach(ev => hb.addEventListener(ev, endHold));
+hb.addEventListener("keydown", e => { if ((e.key === " " || e.key === "Enter") && !e.repeat) { e.preventDefault(); startHold(); } });
+hb.addEventListener("keyup", e => { if (e.key === " " || e.key === "Enter") endHold(); });
+hb.addEventListener("contextmenu", e => e.preventDefault());
+
+let myLast = null;
+async function release() {
+  $("holdLabel").textContent = "Releasing your lantern…";
+  hb.disabled = true;
+  try {
+    const row = await store.add({ text: $("wish").value.trim(), color: pickColor, city: normCity($("city").value), for_name: $("forName").value.trim().replace(/\s+/g, " ") || null });
+    try { navigator.vibrate && navigator.vibrate([20, 40, 30]); } catch (e) {}
+    myLast = row; journeyMode = false;
+    lsSet("kandil-last", Date.now());
+    wishes.unshift(row);
+    if (LIVE && store.total >= SEED_UNTIL && wishes.some(w => w.sample)) wishes = wishes.filter(w => !w.sample);
+    $("lw").classList.add("rise"); Music.whoosh();
+    setTimeout(() => Music.duck(false), 4500);
+    setTimeout(() => {
+      closeSheet("writeSheet");
+      $("lw").classList.remove("rise", "folded");
+      const l = spawn(row, false); l.depth = 1; l.x0 = W / 2; l.y = H - groundH * .4; l.boost = 70; l.amp = 10;
+      lanterns.push(l); const drop = lanterns.findIndex(x => !x.wish.mine && x !== selected); if (lanterns.length > maxLanterns + 2 && drop >= 0) lanterns.splice(drop, 1);
+      $("empty").hidden = true;
+      updateCount();
+      if (row.city) { lsSet("skyw-city", row.city); const n = bumpCity(row.city); myLast.cityN = n; setTimeout(() => toast(`${row.city} now has ${n.toLocaleString("en-IN")} ${lanternWord(n)} tonight`), 1200); }
+      $("wish").value = ""; $("forName").value = ""; $("counter").textContent = "0/140"; $("toFold").disabled = true;
+      holdP = 0; hb.style.setProperty("--p", 0); launching = false;
+      setTimeout(openShare, 3400);
+    }, reduced ? 50 : 1100);
+  } catch (e) {
+    launching = false; holdP = 0; hb.style.setProperty("--p", 0); $("lw").style.setProperty("--lit", 0);
+    hb.disabled = false; $("holdLabel").textContent = "Try again";
+    $("fErr").textContent = "Your lantern couldn't reach the sky. Check your internet, then press and hold again."; $("fErr").hidden = false;
+  }
+}
+
+/* ---------- 3D paper lantern for the folding step (plain canvas, no libraries) ---------- */
+const L3 = (() => {
+  const N = 12;                                                       // paper panels around the lantern
+  const PROF = [[-1.1, .5], [-.78, .6], [-.25, .62], [.35, .55], [.95, .4]]; // [height, radius], top to bottom
+  const WARM = [255, 244, 214];
+  let cv = null, x = null, raf = 0, last = 0, foldAt = 0, rot = 0, base = [255, 148, 66], cw = 300, ch = 310, dpr = 1;
+  const hex = (h) => { const n = parseInt(h.slice(1), 16); return [n >> 16, (n >> 8) & 255, n & 255]; };
+  const mixc = (a, b, t) => [a[0] + (b[0] - a[0]) * t, a[1] + (b[1] - a[1]) * t, a[2] + (b[2] - a[2]) * t];
+  const rgb = (c, a = 1) => `rgba(${c[0] | 0},${c[1] | 0},${c[2] | 0},${a})`;
+  const toHex = (c) => "#" + c.map(v => (v | 0).toString(16).padStart(2, "0")).join("");
+  const ease = (t) => t < .5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
+
+  function size() {
+    dpr = Math.min(2, window.devicePixelRatio || 1);
+    cw = cv.clientWidth || 300; ch = cv.clientHeight || 310;
+    cv.width = Math.round(cw * dpr); cv.height = Math.round(ch * dpr);
+  }
+  function start(color) {
+    cv = $("lc"); x = cv.getContext("2d"); size();
+    base = hex(color); foldAt = 0; rot = 0;
+    if (!raf) { last = performance.now(); raf = requestAnimationFrame(tick); }
+  }
+  function fold() { foldAt = performance.now(); }
+  function stop() { cancelAnimationFrame(raf); raf = 0; }
+
+  function tick(now) {
+    const dt = Math.min(.05, (now - last) / 1000); last = now;
+    const p = foldAt ? ease(Math.min(1, (now - foldAt) / 1200)) : 0;
+    const lit = launching ? 1 : holdP;
+    if (p >= 1 && !reduced) rot += dt * .45;
+    draw(p, lit, now / 1000);
+    raf = requestAnimationFrame(tick);
+  }
+
+  function draw(p, lit, t) {
+    x.setTransform(dpr, 0, 0, dpr, 0, 0);
+    x.clearRect(0, 0, cw, ch);
+    const U = 64 + 22 * p;                                   // flat sheet starts small enough to fit, then zooms in
+    const cx = cw / 2, cy = ch * (.47 + .04 * p) + (p >= 1 && !reduced ? Math.sin(t * 1.4) * 3 : 0);
+    const th = rot, ph = -.5 * p, D = 5;                     // spin, and look up from slightly below
+    const ct = Math.cos(th), st = Math.sin(th), cp = Math.cos(ph), sp = Math.sin(ph);
+
+    // the sheet rolls from a flat strip into a closed ring of paper
+    const P = PROF.map(([y, r]) => {
+      const k = p / r, row = [];
+      for (let j = 0; j <= N; j++) {
+        const s = (j / N - .5) * 2 * Math.PI * r;
+        let px = s, pz = 0;
+        if (k > 1e-4) { px = Math.sin(s * k) / k; pz = (1 - Math.cos(s * k)) / k - r * p; }
+        const x1 = px * ct + pz * st, z1 = -px * st + pz * ct;
+        const y2 = y * cp - z1 * sp, z2 = y * sp + z1 * cp, f = D / (D + z2);
+        row.push({ X: cx + x1 * U * f, Y: cy + y2 * U * f, z: z2, x1, y2 });
+      }
+      return row;
+    });
+    const bot = PROF.length - 1, mid = P[bot].reduce((a, q) => [a[0] + q.X, a[1] + q.Y], [0, 0]).map(v => v / (N + 1));
+    const flameX = p >= 1 ? mid[0] : cx, flameY = p >= 1 ? mid[1] : cy + .95 * U;
+
+    // soft outer glow once lit
+    if (lit > 0) { x.globalAlpha = .55 * lit; x.drawImage(glow(toHex(mixc(base, WARM, .3))), cx - 150, cy - 150, 300, 300); x.globalAlpha = 1; }
+
+    // collect panels
+    const faces = [];
+    for (let i = 0; i < bot; i++) for (let j = 0; j < N; j++) {
+      const a = P[i][j], b = P[i][j + 1], c = P[i + 1][j + 1], d = P[i + 1][j];
+      const area = (a.X * b.Y - b.X * a.Y) + (b.X * c.Y - c.X * b.Y) + (c.X * d.Y - d.X * c.Y) + (d.X * a.Y - a.X * d.Y);
+      const u = ((a.X + b.X + c.X + d.X) / 4 - cx) / (.62 * U);   // -1 left edge … 1 right edge
+      faces.push({ q: [a, b, c, d], front: area > 0, z: (a.z + b.z + c.z + d.z) / 4, i, shade: .5 + .5 * Math.max(0, Math.cos((u + .35) * 1.3)) });
+    }
+    const near = (i) => .35 + .65 * (i / (bot - 1));          // panels nearer the flame glow more
+    const quad = (f) => { const [a, b, c, d] = f.q; x.beginPath(); x.moveTo(a.X, a.Y); x.lineTo(b.X, b.Y); x.lineTo(c.X, c.Y); x.lineTo(d.X, d.Y); x.closePath(); };
+
+    // top cap (seen from inside, through the paper)
+    if (p > .8) {
+      x.globalAlpha = (p - .8) / .2; x.beginPath();
+      P[0].forEach((q, j) => j ? x.lineTo(q.X, q.Y) : x.moveTo(q.X, q.Y)); x.closePath();
+      x.fillStyle = rgb(mixc(mixc(base, [40, 15, 20], .45), WARM, .5 * lit)); x.fill(); x.globalAlpha = 1;
+    }
+    // inside of the far panels
+    faces.filter(f => !f.front).sort((a, b) => b.z - a.z).forEach(f => {
+      quad(f);
+      x.fillStyle = rgb(mixc(mixc(base, [30, 12, 18], .5), mixc(base, [255, 226, 160], .55), lit * near(f.i)));
+      x.fill(); x.strokeStyle = "rgba(60,20,0,.25)"; x.lineWidth = .7; x.stroke();
+    });
+
+    // burner, wires and flame sit inside the opening
+    if (p > .92) {
+      const ring = P[bot], a = (p - .92) / .08;
+      x.globalAlpha = a; x.strokeStyle = "rgba(70,40,20,.85)"; x.lineWidth = 1;
+      for (const [m, n] of [[0, N / 2], [N / 4, 3 * N / 4]]) { x.beginPath(); x.moveTo(ring[m].X, ring[m].Y); x.lineTo(ring[n].X, ring[n].Y); x.stroke(); }
+      x.fillStyle = "#3a2414"; x.beginPath(); x.ellipse(flameX, flameY, 6, 2.6, 0, 0, 7); x.fill();
+      x.globalAlpha = 1;
+      if (lit > 0) drawFlame(flameX, flameY - 1, lit, t, U);
+    }
+
+    // outside of the near panels: translucent paper that glows from within
+    faces.filter(f => f.front).sort((a, b) => b.z - a.z).forEach(f => {
+      quad(f);
+      const sh = p < .5 ? 1 : f.shade;
+      const unlit = mixc(mixc(base, [0, 0, 0], .6 - .58 * sh), [255, 236, 210], sh > .97 ? .12 : 0);
+      const glowc = mixc(mixc(base, WARM, .5), [255, 255, 240], .25 * near(f.i));
+      x.fillStyle = rgb(mixc(unlit, mixc(glowc, mixc(base, [0, 0, 0], .25), (1 - sh) * .35), lit * (.55 + .45 * near(f.i))), p < .3 ? 1 : .86);
+      x.fill(); x.strokeStyle = "rgba(70,25,0,.28)"; x.lineWidth = .8; x.stroke();
+    });
+    // the flame shows softly through the paper
+    if (lit > 0 && p > .92) { x.globalAlpha = .45; drawFlame(flameX, flameY - 1, lit, t, U, true); x.globalAlpha = 1; }
+    // the sheet is plain paper before it folds
+    if (p < .35) {
+      x.globalAlpha = 1 - p / .35;
+      faces.forEach(f => { quad(f); x.fillStyle = "#fff4df"; x.fill(); });
+      x.globalAlpha = 1;
+    }
+    // bamboo hoop at the bottom
+    if (p > .9) {
+      x.globalAlpha = (p - .9) / .1; x.beginPath(); P[bot].forEach((q, j) => j ? x.lineTo(q.X, q.Y) : x.moveTo(q.X, q.Y));
+      x.strokeStyle = "rgba(120,72,30,.95)"; x.lineWidth = 1.6; x.stroke(); x.globalAlpha = 1;
+    }
+    // light spilling out of the opening
+    if (lit > 0 && p > .92) {
+      x.save(); x.globalCompositeOperation = "lighter"; x.globalAlpha = .5 * lit;
+      x.drawImage(glow("#ffc35a"), flameX - 60, flameY - 90, 120, 120); x.restore();
+    }
+  }
+
+  function drawFlame(fx, fy, lit, t, U, through) {
+    const s = .35 + .65 * lit, fl = 1 + .09 * Math.sin(t * 23) + .05 * Math.sin(t * 37 + 1);
+    const h = U * .55 * s * fl, w = U * .12 * s, sway = Math.sin(t * 6.5) * w * .25, a0 = x.globalAlpha;
+    x.save(); x.globalCompositeOperation = "lighter";
+    x.globalAlpha = .7 * lit * a0; x.drawImage(glow("#ff9a3c"), fx - h * 1.3, fy - h * 1.6, h * 2.6, h * 2.6);
+    x.restore();
+    if (through) { x.globalAlpha = a0; }
+    const layer = (k, color) => {
+      x.beginPath(); x.moveTo(fx - w * k, fy);
+      x.bezierCurveTo(fx - w * k * 1.1, fy - h * k * .45, fx - w * k * .35 + sway, fy - h * k * .8, fx + sway * 1.6, fy - h * k);
+      x.bezierCurveTo(fx + w * k * .35 + sway, fy - h * k * .8, fx + w * k * 1.1, fy - h * k * .45, fx + w * k, fy);
+      x.quadraticCurveTo(fx, fy + w * k * .7, fx - w * k, fy); x.fillStyle = color; x.fill();
+    };
+    layer(1, "rgba(255,120,40,.75)");
+    layer(.74, "rgba(255,186,70,.95)");
+    layer(.46, "rgba(255,246,214,1)");
+    x.beginPath(); x.ellipse(fx, fy - w * .1, w * .5, w * .35, 0, 0, 7); x.fillStyle = "rgba(120,170,255,.55)"; x.fill();
+  }
+
+  return { start, fold, stop, size };
+})();
+
+/* ---------- share card ---------- */
+function shareURL(from) {
+  let u = CONFIG.SHARE_URL || location.href.split("#")[0];
+  try { const x = new URL(u); x.searchParams.delete("from"); if (from) x.searchParams.set("from", from); u = x.toString(); } catch (e) {}
+  return u;
+}
+let journeyMode = false;
+function journeyLine(w) {
+  const r = w.read_count || 0, c = w.cities || 0;
+  return `Read by ${r.toLocaleString("en-IN")} ${r === 1 ? "person" : "people"}${c > 1 ? ` in ${c} cities` : ""}`;
+}
+function giftURL(w) {
+  let u = shareURL("dedication");
+  try { const x = new URL(u); x.searchParams.set("l", w.id); u = x.toString(); } catch (e) {}
+  return u;
+}
+function caption() {
+  if (journeyMode && myLast) return `My Diwali wish has been ${journeyLine(myLast).toLowerCase()} 🪔\nAdd yours to the sky:`;
+  const base = "This Diwali I folded a wish into a lantern and added it to a sky full of wishes 🪔";
+  if (myLast && myLast.city && myLast.cityN) return `${base}\n${myLast.city} has ${myLast.cityN.toLocaleString("en-IN")} ${lanternWord(myLast.cityN)} in the sky tonight. Add one for your city:`;
+  return base + "\nAdd yours:";
+}
+
+async function drawShare(w, showWish) {
+  try { await Promise.all([document.fonts.load('52px "Kalam"'), document.fonts.load('600 30px "Figtree"'), document.fonts.load('56px "Fraunces"')]); } catch (e) {}
+  const CW = 1080, CH = 1350, c = document.createElement("canvas"); c.width = CW; c.height = CH;
+  const x = c.getContext("2d");
+  const g = x.createLinearGradient(0, 0, 0, CH); g.addColorStop(0, "#070a22"); g.addColorStop(.55, "#141846"); g.addColorStop(1, "#43203f");
+  x.fillStyle = g; x.fillRect(0, 0, CW, CH);
+  const r = seeded(11);
+  for (let i = 0; i < 260; i++) { x.globalAlpha = .25 + r() * .6; x.fillStyle = "#fff"; const s = r() < .1 ? 3 : 2; x.fillRect(r() * CW, r() * CH * .75, s, s); }
+  x.globalAlpha = 1;
+  // a few distant lanterns
+  const keys = Object.keys(SPRITES);
+  for (let i = 0; i < 9; i++) { const sp = SPRITES[keys[i % 4]], k = .4 + r() * .35; x.globalAlpha = .45 + r() * .3;
+    x.drawImage(sp.c, r() * (CW - 120), 120 + r() * 640, sp.w * k, sp.h * k); }
+  x.globalAlpha = 1;
+  // hero lantern
+  const sp = SPRITES[w.color] || SPRITES.saffron, k = 3.1;
+  x.drawImage(sp.c, CW / 2 - sp.w * k / 2, 300 - 40, sp.w * k, sp.h * k);
+  // skyline
+  const cityShare = drawCity([x, x, x], CW, CH, 260, seeded(42));
+  for (let z = 0; z < 3; z++) drawCityLights(x, cityShare, 1.3, 0, z, 0);
+  // header
+  x.textAlign = "center";
+  x.fillStyle = "#aba6cf"; x.font = '600 26px "Figtree", sans-serif';
+  if ("letterSpacing" in x) x.letterSpacing = "6px";
+  x.fillText("DIWALI 2026", CW / 2, 120);
+  if ("letterSpacing" in x) x.letterSpacing = "0px";
+  x.fillStyle = "#ffb85c"; x.font = '56px "Fraunces", serif'; x.shadowColor = "rgba(255,184,92,.6)"; x.shadowBlur = 24;
+  x.fillText("A Sky Full of Wishes", CW / 2, 195); x.shadowBlur = 0;
+  // wish
+  let y = 900;
+  if (showWish) {
+    x.fillStyle = "#f6eddf"; let size = 56; x.font = `${size}px "Kalam", cursive`;
+    let lines = wrap(x, "“" + w.text + "”", 860);
+    while (lines.length > 3 && size > 40) { size -= 4; x.font = `${size}px "Kalam", cursive`; lines = wrap(x, "“" + w.text + "”", 860); }
+    y = 860 - (lines.length - 1) * size * .6;
+    if (w.for_name) {
+      x.fillStyle = "#ffb85c"; x.font = '600 26px "Figtree", sans-serif';
+      if ("letterSpacing" in x) x.letterSpacing = "5px";
+      x.fillText(("For " + w.for_name).toUpperCase(), CW / 2, y - size * 1.15);
+      if ("letterSpacing" in x) x.letterSpacing = "0px";
+      x.font = `${size}px "Kalam", cursive`; x.fillStyle = "#f6eddf";
+    }
+    lines.forEach((l, i) => x.fillText(l, CW / 2, y + i * size * 1.25));
+    y += lines.length * size * 1.25;
+    if (journeyMode) { x.fillStyle = "#ffcf6a"; x.font = '600 32px "Figtree", sans-serif'; x.fillText(`${journeyLine(w)}  ·  ${(w.light_count || 0).toLocaleString("en-IN")} sent light`, CW / 2, y + 8); }
+    else if (w.city) { x.fillStyle = "#aba6cf"; x.font = '400 30px "Figtree", sans-serif'; x.fillText("— " + w.city + (w.cityN ? `  ·  ${w.cityN.toLocaleString("en-IN")} ${lanternWord(w.cityN)} tonight` : ""), CW / 2, y + 6); }
+  } else {
+    x.fillStyle = "#f6eddf"; x.font = '52px "Kalam", cursive';
+    const two = w.for_name && !journeyMode ? ["I lit a lantern", "for " + w.for_name + " tonight."] : ["I let my wish go", "into the sky tonight."];
+    x.fillText(two[0], CW / 2, 860); x.fillText(two[1], CW / 2, 930);
+    if (journeyMode) { x.fillStyle = "#ffcf6a"; x.font = '600 32px "Figtree", sans-serif'; x.fillText(`${journeyLine(w)}  ·  ${(w.light_count || 0).toLocaleString("en-IN")} sent light`, CW / 2, 1000); }
+  }
+  x.fillStyle = "#ffe7a8"; x.font = '600 34px "Figtree", sans-serif';
+  const fade = x.createLinearGradient(0, CH - 190, 0, CH); fade.addColorStop(0, "rgba(5,4,18,0)"); fade.addColorStop(1, "rgba(5,4,18,.9)");
+  x.fillStyle = fade; x.fillRect(0, CH - 190, CW, 190);
+  x.fillStyle = "#ffe7a8"; x.fillText("Release your own lantern", CW / 2, CH - 56);
+  return c.toDataURL("image/png");
+}
+function wrap(x, text, maxW) {
+  const words = text.split(/\s+/), lines = []; let line = "";
+  for (const w of words) { const t = line ? line + " " + w : w; if (x.measureText(t).width > maxW && line) { lines.push(line); line = w; } else line = t; }
+  if (line) lines.push(line); return lines;
+}
+
+let shareData = "";
+async function renderShare() {
+  if (!myLast) return;
+  shareData = await drawShare(myLast, $("showWish").checked);
+  $("shareImg").src = shareData;
+}
+async function openShare() {
+  if (!myLast) return;
+  const text = caption(), gift = myLast.for_name && !journeyMode;
+  $("sTitle").textContent = journeyMode ? "Your lantern's journey" : gift ? `Your lantern for ${myLast.for_name} is in the sky` : "Your lantern is in the sky";
+  $("sLead").textContent = gift ? "Send it to them. When they open the link, it rises first in their sky." : journeyMode ? "Let people know where your wish has been." : "It will drift through other people's skies all night. Invite friends to release theirs.";
+  $("wa").textContent = gift ? `Send it to ${myLast.for_name.length > 16 ? myLast.for_name.slice(0, 15) + "…" : myLast.for_name}` : "Send on WhatsApp";
+  $("wa").href = "https://wa.me/?text=" + encodeURIComponent(gift ? `I lit a lantern for you this Diwali 🪔 Open it to watch it rise: ${giftURL(myLast)}` : text + " " + shareURL("whatsapp"));
+  $("tw").href = "https://twitter.com/intent/tweet?text=" + encodeURIComponent(text) + "&url=" + encodeURIComponent(shareURL("x"));
+  $("li").href = "https://www.linkedin.com/feed/?shareActive=true&text=" + encodeURIComponent(text + " " + shareURL("linkedin"));
+  $("save").hidden = inFrame;
+  $("saveHint").textContent = inFrame ? "Long-press the image to save it, then add it to your post." : "Save the image and add it to your post.";
+  $("shareImg").removeAttribute("src");
+  openSheet("shareSheet");
+  renderShare();
+}
+$("showWish").onchange = renderShare;
+async function copyCaption(msg) {
+  const full = caption() + " " + shareURL("copied");
+  try { await navigator.clipboard.writeText(full); toast(msg); }
+  catch (e) { const ta = $("copybox"); ta.value = full; ta.select(); try { document.execCommand("copy"); toast(msg); } catch (e2) { toast("Couldn't copy. Select the text and copy it instead."); } }
+}
+$("copy").onclick = () => copyCaption("Caption copied");
+$("li").addEventListener("click", () => copyCaption("Caption copied. Paste it into LinkedIn."));
+$("save").onclick = async () => {
+  try {
+    const blob = await (await fetch(shareData)).blob();
+    const file = new File([blob], "sky-full-of-wishes.png", { type: "image/png" });
+    if (navigator.canShare && navigator.canShare({ files: [file] })) { await navigator.share({ files: [file], text: caption() + " " + shareURL("shared") }); return; }
+  } catch (e) {}
+  const a = document.createElement("a"); a.href = shareData; a.download = "sky-full-of-wishes.png"; document.body.appendChild(a); a.click(); a.remove();
+};
+
+/* ---------- music: generative soft felt piano (D Lydian, the scale of Raag Yaman) ---------- */
+const Music = (() => {
+  let ac, bus, master, on = false, timer = null, nextBar = 0, bar = 0, nextBell = 0, hold = null, noiseBuf, boomBuf, mbus;
+  const MUSIC_VOL = .38, DUCK_VOL = .1;
+  const SA = 146.83;
+  const BEAT = .95;
+  const mtof = (m) => 440 * Math.pow(2, (m - 69) / 12);
+  // [bass, chord tones] — Dmaj9, E/D, Bm9, A/C#
+  const PROG = [
+    [38, [62, 66, 69, 73, 76]],
+    [38, [64, 68, 71, 74, 78]],
+    [47, [62, 66, 69, 73, 74]],
+    [49, [61, 64, 69, 71, 76]]
+  ];
+  const MEL = [74, 76, 78, 80, 81, 83, 85, 86, 88];
+  function init() {
+    ac = new (window.AudioContext || window.webkitAudioContext)();
+    master = ac.createGain(); master.gain.value = 0;
+    const comp = ac.createDynamicsCompressor(); comp.threshold.value = -20; comp.ratio.value = 2.5;
+    master.connect(comp).connect(ac.destination);
+    const rev = ac.createConvolver(); rev.buffer = impulse(4.5);
+    const wet = ac.createGain(); wet.gain.value = .6; rev.connect(wet).connect(master);
+    const dry = ac.createGain(); dry.gain.value = .7; dry.connect(master);
+    bus = ac.createGain(); bus.connect(dry); bus.connect(rev);
+    mbus = ac.createGain(); mbus.gain.value = MUSIC_VOL; mbus.connect(bus);
+    noiseBuf = ac.createBuffer(1, ac.sampleRate * .1, ac.sampleRate);
+    const d = noiseBuf.getChannelData(0); for (let i = 0; i < d.length; i++) d[i] = (Math.random() * 2 - 1) * (1 - i / d.length);
+  }
+  function impulse(sec) {
+    const len = Math.floor(ac.sampleRate * sec), b = ac.createBuffer(2, len, ac.sampleRate);
+    for (let c = 0; c < 2; c++) { const d = b.getChannelData(c); for (let i = 0; i < len; i++) d[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / len, 3); }
+    return b;
+  }
+  // a muted "felt" piano note: slightly inharmonic partials, soft hammer, warm low-pass
+  function piano(m, t, vel, dest) {
+    const f = mtof(m), out = ac.createGain(), lp = ac.createBiquadFilter();
+    const dur = Math.max(1.6, Math.min(7, 5.5 * Math.pow(220 / f, .45)));
+    lp.type = "lowpass"; lp.Q.value = .3;
+    lp.frequency.setValueAtTime(900 + vel * 2200, t); lp.frequency.exponentialRampToValueAtTime(500 + vel * 500, t + dur * .6);
+    out.gain.value = vel * .11;
+    for (let k = 1; k <= 6; k++) {
+      const o = ac.createOscillator(), g = ac.createGain();
+      o.frequency.value = f * k * Math.sqrt(1 + .00035 * k * k);
+      o.detune.value = (Math.random() - .5) * 4;
+      const a = 1 / Math.pow(k, 1.5), dk = dur / Math.pow(k, .6);
+      g.gain.setValueAtTime(0, t); g.gain.linearRampToValueAtTime(a, t + .008); g.gain.exponentialRampToValueAtTime(a * .35, t + .25);
+      g.gain.exponentialRampToValueAtTime(.0001, t + dk);
+      o.connect(g).connect(lp); o.start(t); o.stop(t + dk + .05);
+    }
+    const hn = ac.createBufferSource(), hf = ac.createBiquadFilter(), hg = ac.createGain();
+    hn.buffer = noiseBuf; hf.type = "lowpass"; hf.frequency.value = 1400; hg.gain.value = .12 * vel;
+    hn.connect(hf).connect(hg).connect(lp); hn.start(t);
+    lp.connect(out).connect(dest || mbus);
+  }
+  function noise() {
+    if (!boomBuf) { boomBuf = ac.createBuffer(1, ac.sampleRate * 1.6, ac.sampleRate); const d = boomBuf.getChannelData(0); for (let i = 0; i < d.length; i++) d[i] = Math.random() * 2 - 1; }
+    return boomBuf;
+  }
+  function bell(t, f = 620, vol = .03, dest) {
+    for (const [r, a, d] of [[1, 1, 3.2], [2.02, .5, 2.2], [2.76, .35, 1.6], [5.4, .18, .9]]) {
+      const o = ac.createOscillator(), g = ac.createGain(); o.frequency.value = f * r;
+      g.gain.setValueAtTime(0, t); g.gain.linearRampToValueAtTime(vol * a, t + .005); g.gain.exponentialRampToValueAtTime(.0001, t + d);
+      o.connect(g).connect(dest || mbus); o.start(t); o.stop(t + d + .1);
+    }
+  }
+  const hum = () => (Math.random() - .5) * .04;
+  function playBar(t) {
+    const [bass, ch] = PROG[bar % PROG.length];
+    piano(bass, t, .55); piano(bass + 12, t + .02, .3);
+    // broken chord, gently varied each time
+    const pattern = [[0, 0], [.5, 1], [1, 2], [1.5, 3], [2, 4], [2.5, 2], [3, 1], [3.5, 3]];
+    for (const [b, i] of pattern) {
+      if (b > 0 && Math.random() < .28) continue;
+      piano(ch[i % ch.length], t + b * BEAT + hum(), .28 + Math.random() * .14);
+    }
+    // a sparse melody note or two, leaning on chord tones an octave up
+    if (Math.random() < .75) {
+      const tones = ch.map(n => n + 12).filter(n => n >= 74 && n <= 88);
+      const pool = Math.random() < .7 && tones.length ? tones : MEL;
+      const n1 = pool[Math.floor(Math.random() * pool.length)];
+      piano(n1, t + BEAT * (Math.random() < .5 ? 0 : 1) + hum(), .42);
+      if (Math.random() < .5) {
+        const idx = MEL.indexOf(n1), step = Math.random() < .5 ? -1 : 1;
+        const n2 = MEL[Math.max(0, Math.min(MEL.length - 1, (idx < 0 ? 4 : idx) + step))];
+        piano(n2, t + BEAT * 2.5 + hum(), .36);
+      }
+    }
+    bar++;
+  }
+  function schedule() {
+    const now = ac.currentTime;
+    while (nextBar < now + 1.5) { playBar(nextBar); nextBar += BEAT * 4; }
+    if (nextBell < now) { bell(now + .2, 620, .018); nextBell = now + 35 + Math.random() * 25; }
+  }
+  function set(v) {
+    if (!ac) init();
+    on = v;
+    const t = ac.currentTime;
+    master.gain.cancelScheduledValues(t); master.gain.setValueAtTime(master.gain.value, t);
+    if (v) {
+      ac.resume();
+      master.gain.linearRampToValueAtTime(.7, t + 2);
+      if (!timer) { nextBar = t + .15; bar = 0; nextBell = t + 25; timer = setInterval(schedule, 200); schedule(); }
+    } else {
+      master.gain.linearRampToValueAtTime(0, t + .8);
+      clearInterval(timer); timer = null;
+      setTimeout(() => { if (!on) ac.suspend(); }, 900);
+    }
+  }
+  document.addEventListener("visibilitychange", () => { if (!ac || !on) return; document.hidden ? ac.suspend() : ac.resume(); });
+  return {
+    get on() { return on; },
+    set,
+    holdStart() {
+      if (!on || hold) return;
+      const t = ac.currentTime, o = ac.createOscillator(), g = ac.createGain(), tr = ac.createOscillator(), tg = ac.createGain();
+      o.type = "sine"; o.frequency.setValueAtTime(SA * 4, t); o.frequency.exponentialRampToValueAtTime(SA * 8, t + 1.6);
+      tr.frequency.value = 11; tg.gain.value = .01; tr.connect(tg).connect(g.gain);
+      g.gain.setValueAtTime(0, t); g.gain.linearRampToValueAtTime(.05, t + 1.6);
+      o.connect(g).connect(bus); o.start(t); tr.start(t);
+      hold = { o, g, tr };
+    },
+    holdEnd(done) {
+      if (!hold) return;
+      const t = ac.currentTime, h = hold; hold = null;
+      h.g.gain.cancelScheduledValues(t); h.g.gain.setValueAtTime(h.g.gain.value, t); h.g.gain.linearRampToValueAtTime(0, t + .3);
+      h.o.stop(t + .35); h.tr.stop(t + .35);
+      if (done) [74, 78, 81, 85, 86].forEach((m, i) => piano(m, t + .05 + i * .12, .55, bus));
+    },
+    chime() { if (on) piano(86, ac.currentTime + .02, .4, bus); },
+    light() { if (!on) return; const t = ac.currentTime; piano(81, t, .4, bus); piano(88, t + .13, .42, bus); },
+    star() { if (!on) return; const t = ac.currentTime; [86, 90, 93, 98].forEach((m, i) => piano(m, t + i * .07, .38, bus)); },
+    pop() { if (on) piano(93, ac.currentTime + .02, .32, bus); },
+    templeBell() { if (!on) return; const t = ac.currentTime; [0, .95, 1.9].forEach((d, i) => bell(t + d, 523, .06 * (1 - i * .28), bus)); },
+    clock(n) { if (!on) return; const t = ac.currentTime; for (let i = 0; i < n; i++) bell(t + .1 + i * .6, 311, .05, bus); },
+    duck(down) {
+      if (!ac || !mbus) return;
+      const t = ac.currentTime; mbus.gain.cancelScheduledValues(t); mbus.gain.setValueAtTime(mbus.gain.value, t);
+      mbus.gain.linearRampToValueAtTime(down ? DUCK_VOL : MUSIC_VOL, t + (down ? .5 : 1.8));
+    },
+    fold() { // soft paper rustles while the wish folds into a lantern
+      if (!on) return;
+      const buf = noise();
+      [0, .35, .7, 1.05].forEach((d, i) => {
+        const t = ac.currentTime + .7 + d, src = ac.createBufferSource(), bp = ac.createBiquadFilter(), g = ac.createGain();
+        src.buffer = buf; bp.type = "bandpass"; bp.frequency.value = 2400 + i * 500; bp.Q.value = .8;
+        g.gain.setValueAtTime(0, t); g.gain.linearRampToValueAtTime(.22, t + .03); g.gain.exponentialRampToValueAtTime(.0001, t + .28);
+        src.connect(bp).connect(g).connect(bus); src.start(t, Math.random(), .32);
+      });
+    },
+    whoosh() { // the lantern lifting off
+      if (!on) return;
+      const t = ac.currentTime, src = ac.createBufferSource(), bp = ac.createBiquadFilter(), g = ac.createGain();
+      src.buffer = noise(); bp.type = "bandpass"; bp.Q.value = 1.2;
+      bp.frequency.setValueAtTime(250, t); bp.frequency.exponentialRampToValueAtTime(1600, t + 1.4);
+      g.gain.setValueAtTime(0, t); g.gain.linearRampToValueAtTime(.16, t + .35); g.gain.exponentialRampToValueAtTime(.0001, t + 1.6);
+      src.connect(bp).connect(g).connect(bus); src.start(t, 0, 1.6);
+    },
+    boom(sc, crackle) {
+      if (!on) return;
+      noise();
+      const t = ac.currentTime + .12 + (1 - sc) * .5;
+      const src = ac.createBufferSource(), lp = ac.createBiquadFilter(), g = ac.createGain();
+      src.buffer = boomBuf; lp.type = "lowpass"; lp.frequency.setValueAtTime(450 * sc + 150, t); lp.frequency.exponentialRampToValueAtTime(70, t + 1.2);
+      g.gain.setValueAtTime(0, t); g.gain.linearRampToValueAtTime(.3 * sc, t + .01); g.gain.exponentialRampToValueAtTime(.0001, t + 1.4);
+      src.connect(lp).connect(g).connect(bus); src.start(t); src.stop(t + 1.5);
+      if (crackle) for (let k = 0; k < 10; k++) {
+        const tt = t + .45 + Math.random() * 1.2, s2 = ac.createBufferSource(), hp = ac.createBiquadFilter(), g2 = ac.createGain();
+        s2.buffer = boomBuf; hp.type = "highpass"; hp.frequency.value = 3000;
+        g2.gain.setValueAtTime(.05 * sc, tt); g2.gain.exponentialRampToValueAtTime(.0001, tt + .04);
+        s2.connect(hp).connect(g2).connect(bus); s2.start(tt, Math.random(), .05);
+      }
+    }
+  };
+})();
+
+// Music is on by default. Browsers only allow sound after the visitor's first tap,
+// so it starts on that tap (for most people, "Show me the sky"). Turning it off is remembered.
+let musicPref = lsGet("kandil-music", true);
+function showMusic(v) { $("music").setAttribute("aria-pressed", String(v)); $("music").setAttribute("aria-label", v ? "Turn music off" : "Play music"); }
+function setMusic(v) { musicPref = v; lsSet("kandil-music", v); Music.set(v); showMusic(v); }
+$("music").onclick = () => setMusic(!musicPref);
+showMusic(musicPref);
+if (musicPref) {
+  const evs = ["pointerup", "touchend", "keydown"];
+  const first = (e) => {
+    evs.forEach(n => removeEventListener(n, first, true));
+    if (e.target.closest && e.target.closest("#music")) return; // their tap on the icon turns it off instead
+    if (musicPref && !Music.on) Music.set(true);
+  };
+  evs.forEach(n => addEventListener(n, first, true));
+}
+
+/* ---------- cities tonight ---------- */
+const CITY_ALIAS = { "bangalore": "Bengaluru", "bengaluru": "Bengaluru", "bombay": "Mumbai", "new delhi": "Delhi", "delhi ncr": "Delhi", "ncr": "Delhi", "gurgaon": "Gurugram", "calcutta": "Kolkata", "madras": "Chennai", "poona": "Pune", "trivandrum": "Thiruvananthapuram", "cochin": "Kochi", "baroda": "Vadodara", "benaras": "Varanasi", "banaras": "Varanasi", "mysore": "Mysuru" };
+const CITY_LIST = ["Delhi", "Mumbai", "Bengaluru", "Hyderabad", "Chennai", "Kolkata", "Pune", "Ahmedabad", "Jaipur", "Lucknow", "Chandigarh", "Indore", "Kochi", "Gurugram", "Noida", "Surat", "Bhopal", "Patna", "Nagpur", "Varanasi", "Goa", "Dehradun", "Coimbatore", "Visakhapatnam", "Guwahati"];
+function normCity(c) {
+  if (!c) return null;
+  const t = c.trim().replace(/\s+/g, " "); if (!t) return null;
+  const k = t.toLowerCase();
+  return CITY_ALIAS[k] || k.replace(/(^|[\s-])\S/g, m => m.toUpperCase());
+}
+$("cityList").innerHTML = CITY_LIST.map(c => `<option value="${c}"></option>`).join("");
+// Preview only: example numbers so the leaderboard can be seen before the live sky is connected.
+const SAMPLE_COUNTS = { Delhi: 214, Mumbai: 188, Bengaluru: 161, Pune: 97, Hyderabad: 84, Jaipur: 61, Kolkata: 58, Lucknow: 42, Indore: 31, Kochi: 27 };
+let cityCounts = [], tickI = 0, tickT = null;
+const lanternWord = (n) => n === 1 ? "lantern" : "lanterns";
+async function loadCityCounts() {
+  if (LIVE) {
+    try { const res = await store.api("city_tonight?select=city,n&order=n.desc&limit=10"); cityCounts = await res.json(); } catch (e) { return; }
+  } else {
+    const m = { ...SAMPLE_COUNTS };
+    for (const w of mine) if (w.city && Date.now() - new Date(w.created_at).getTime() < 864e5) m[w.city] = (m[w.city] || 0) + 1;
+    cityCounts = Object.entries(m).map(([city, n]) => ({ city, n })).sort((a, b) => b.n - a.n).slice(0, 10);
+  }
+  renderTicker();
+}
+function bumpCity(city) {
+  if (!city) return 0;
+  let row = cityCounts.find(r => r.city === city);
+  if (!row) { row = { city, n: 0 }; cityCounts.push(row); }
+  row.n++; cityCounts.sort((a, b) => b.n - a.n);
+  renderTicker(true);
+  return row.n;
+}
+function tickerLine(r) { return `<b>${r.n.toLocaleString("en-IN")}</b> ${lanternWord(r.n)} from ${escapeHTML(r.city)} tonight`; }
+function escapeHTML(t) { return String(t).replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c])); }
+const hasBoard = () => cityCounts.length > 0 && !(LIVE && cityCounts.length < 3);
+function statLines() {
+  const L = [countLine()];
+  if (hasBoard()) for (const r of cityCounts.slice(0, 5)) L.push(tickerLine(r));
+  return L;
+}
+function renderTicker(mineFirst) {
+  const tk = $("ticker"), tx = $("tickerText"), lines = statLines();
+  tk.style.cursor = hasBoard() ? "pointer" : "default";
+  const myCity = lsGet("skyw-city", null);
+  if (mineFirst && myCity) { const k = cityCounts.slice(0, 5).findIndex(r => r.city === myCity); if (k >= 0) tickI = k + 1; }
+  tickI = tickI % lines.length;
+  tx.innerHTML = lines[tickI];
+  clearInterval(tickT);
+  if (lines.length > 1 && !reduced) tickT = setInterval(() => {
+    const list = statLines();
+    tx.classList.add("fade");
+    setTimeout(() => { tickI = (tickI + 1) % list.length; tx.innerHTML = list[tickI]; tx.classList.remove("fade"); }, 350);
+  }, 4500);
+}
+function openBoard() {
+  const myCity = lsGet("skyw-city", null), max = Math.max(1, ...cityCounts.map(r => r.n));
+  $("board").innerHTML = cityCounts.map((r, i) => `<li class="${r.city === myCity ? "me" : ""}"><span class="rk">${i + 1}</span>
+    <span class="nm"><span>${escapeHTML(r.city)}${r.city === myCity ? "<em>your city</em>" : ""}</span><span class="bar"><i style="width:${Math.max(4, r.n / max * 100)}%"></i></span></span>
+    <span class="n">${r.n.toLocaleString("en-IN")}</span></li>`).join("");
+  $("boardNote").textContent = LIVE ? "Updates every minute." : "Sample numbers for the preview. Real counts appear once the live sky is connected.";
+  $("boardGo").textContent = myCity ? `Release another lantern for ${myCity}` : "Release a lantern for my city";
+  openSheet("citySheet"); hideHint();
+}
+$("ticker").onclick = () => { if (hasBoard()) openBoard(); };
+$("boardGo").onclick = () => { closeSheet("citySheet"); setTimeout(() => $("openWrite").click(), 460); };
+
+/* ---------- visitor count: one anonymous row per visitor per day ---------- */
+function visitSource() {
+  try {
+    const f = new URLSearchParams(location.search).get("from");
+    if (f) return f.toLowerCase().replace(/[^a-z0-9_-]/g, "").slice(0, 40) || null;
+    if (!document.referrer) return null;
+    const h = new URL(document.referrer).hostname.replace(/^www\./, "");
+    if (h === location.hostname) return null;
+    if (/linkedin\.com$|lnkd\.in$/.test(h)) return "linkedin";
+    if (/(^|\.)(t\.co|twitter\.com|x\.com)$/.test(h)) return "x";
+    if (/whatsapp/.test(h)) return "whatsapp";
+    if (/facebook\.com$|fb\.me$/.test(h)) return "facebook";
+    if (/instagram\.com$/.test(h)) return "instagram";
+    if (/google\./.test(h)) return "google";
+    return h.slice(0, 40);
+  } catch (e) { return null; }
+}
+function newId() {
+  try { if (crypto.randomUUID) return crypto.randomUUID(); } catch (e) {}
+  const b = new Uint8Array(16); crypto.getRandomValues(b); b[6] = (b[6] & 15) | 64; b[8] = (b[8] & 63) | 128;
+  const h = [...b].map(v => v.toString(16).padStart(2, "0")).join("");
+  return `${h.slice(0, 8)}-${h.slice(8, 12)}-${h.slice(12, 16)}-${h.slice(16, 20)}-${h.slice(20)}`;
+}
+async function countVisit() {
+  if (!LIVE) return;
+  const today = new Date(Date.now() + 330 * 60000).toISOString().slice(0, 10); // India date
+  if (lsGet("skyw-visit-day", "") === today) return;
+  let vid = lsGet("skyw-vid", null); const first = !vid;
+  if (!vid) { vid = newId(); lsSet("skyw-vid", vid); }
+  try {
+    await store.api("visits", { method: "POST", headers: { Prefer: "return=minimal" }, body: JSON.stringify({ visitor_id: vid, source: visitSource(), first_visit: first }) });
+    lsSet("skyw-visit-day", today);
+  } catch (e) { if (String(e.message).includes("409")) lsSet("skyw-visit-day", today); }
+}
+
+/* ---------- a lantern lit for you ---------- */
+let giftL = null;
+async function openGift(id) {
+  let w = wishes.find(x => x.id === id);
+  if (!w) { try { w = await store.getOne(id); } catch (e) {} if (w) wishes.push(w); }
+  if (!w) return false;
+  const old = lanterns.findIndex(l => l.wish.id === id); if (old >= 0) lanterns.splice(old, 1);
+  const l = spawn(w, false); Object.assign(l, { depth: 1, x0: W / 2, y: H - lift - groundH * .4, boost: 35, amp: 8, speed: 7, gift: true });
+  lanterns.push(l); giftL = l;
+  $("giftFor").hidden = !w.for_name; $("giftFor").textContent = w.for_name ? "For " + w.for_name : "";
+  const g = $("gift"); g.hidden = false; requestAnimationFrame(() => g.classList.add("show"));
+  showScrim(closeGift); hideHint(); setTimeout(() => $("giftGo").focus({ preventScroll: true }), 50);
+  pendingGuide = !lsGet("skyw-guide", false);
+  return true;
+}
+function closeGift() {
+  const g = $("gift"); if (g.hidden) return;
+  g.classList.remove("show"); setTimeout(() => g.hidden = true, 380); hideScrim();
+  if (giftL) setTimeout(() => { if (lanterns.includes(giftL)) openCard(giftL); }, 1800);
+}
+$("giftGo").onclick = closeGift;
+
+/* ---------- your lantern's journey ---------- */
+let journeyW = null;
+async function checkJourney() {
+  const own = mine.slice(-10); if (!own.length) return;
+  let rows;
+  if (LIVE) {
+    const ids = own.map(m => m.id).filter(isUuid); if (!ids.length) return;
+    try { rows = await store.journey(ids); } catch (e) { return; }
+  } else {
+    const m = own[own.length - 1];
+    if (Date.now() - new Date(m.created_at).getTime() < 60000) return;
+    rows = [{ id: m.id, reads: 23, lights: 7, cities: 4, sample: true }];
+  }
+  for (const r of rows) for (const w of [...wishes, ...mine]) if (w.id === r.id) Object.assign(w, { read_count: r.reads, light_count: r.lights, cities: r.cities, journeySample: !!r.sample });
+  const best = rows.filter(r => r.reads > 0).sort((a, b) => b.reads - a.reads)[0]; if (!best) return;
+  const seen = lsGet("skyw-journey-seen", {}); if ((seen[best.id] || 0) >= best.reads) return;
+  seen[best.id] = best.reads; lsSet("skyw-journey-seen", seen);
+  openJourney(wishes.find(x => x.id === best.id) || mine.find(x => x.id === best.id));
+}
+function openJourney(w) {
+  if (!w) return; journeyW = w;
+  $("jWish").textContent = "“" + w.text + "”";
+  $("jReads").textContent = (w.read_count || 0).toLocaleString("en-IN");
+  $("jCities").textContent = (w.cities || 0).toLocaleString("en-IN"); $("jCityBox").hidden = !(w.cities > 1);
+  $("jLights").textContent = (w.light_count || 0).toLocaleString("en-IN");
+  $("jNote").hidden = !w.journeySample;
+  const g = $("journey"); g.hidden = false; requestAnimationFrame(() => g.classList.add("show"));
+  showScrim(closeJourney); hideHint(); setTimeout(() => $("jShare").focus({ preventScroll: true }), 50);
+}
+function closeJourney() { const g = $("journey"); if (g.hidden) return; g.classList.remove("show"); setTimeout(() => g.hidden = true, 380); hideScrim(); }
+$("jShare").onclick = () => { closeJourney(); myLast = journeyW; journeyMode = true; setTimeout(openShare, 400); };
+$("jSky").onclick = () => {
+  closeJourney();
+  let l = lanterns.find(x => x.wish.id === journeyW.id);
+  if (!l) { l = spawn(journeyW, false); Object.assign(l, { depth: 1, x0: W / 2, y: H - lift - groundH * .4, boost: 30, amp: 8 }); lanterns.push(l); }
+  demo = l; clearTimeout(window.__demoT); window.__demoT = setTimeout(() => { if (demo === l) demo = null; }, 15000);
+};
+
+/* ---------- shooting stars ---------- */
+let shoot = null, shootNext = rand(14, 22);
+function shootTick(dt) {
+  shootNext -= dt;
+  if (!shoot && shootNext <= 0 && !document.hidden) {
+    const fromLeft = Math.random() < .5, len = Math.min(W * .7, 420), ang = rand(.22, .42);
+    shoot = { x0: fromLeft ? rand(-30, W * .3) : rand(W * .7, W + 30), y0: rand(H * .08, H * .32), dx: (fromLeft ? 1 : -1) * Math.cos(ang) * len, dy: Math.sin(ang) * len, t: 0, T: reduced ? 1.9 : 1.2 };
+    shootNext = reduced ? rand(60, 90) : rand(28, 55);
+  }
+  if (!shoot) return;
+  shoot.t += dt; const p = shoot.t / shoot.T;
+  if (p > 1.35) { shoot = null; return; }
+  const e = Math.min(1, p), hx = shoot.x0 + shoot.dx * e, hy = shoot.y0 + shoot.dy * e;
+  shoot.hx = hx; shoot.hy = hy;
+  const fade = p > 1 ? 1 - (p - 1) / .35 : Math.min(1, p * 4), tx = hx - shoot.dx * .28, ty = hy - shoot.dy * .28;
+  const g = ctx.createLinearGradient(tx, ty, hx, hy); g.addColorStop(0, "rgba(255,240,210,0)"); g.addColorStop(1, `rgba(255,247,228,${.95 * fade})`);
+  ctx.strokeStyle = g; ctx.lineWidth = 2; ctx.lineCap = "round"; ctx.beginPath(); ctx.moveTo(tx, ty); ctx.lineTo(hx, hy); ctx.stroke();
+  ctx.globalAlpha = fade; ctx.drawImage(glow("#fff1cc"), hx - 9, hy - 9, 18, 18); ctx.globalAlpha = 1;
+}
+function catchStar(x, y) {
+  if (!shoot || shoot.hx == null || Math.hypot(x - shoot.hx, y - shoot.hy) > 60) return false;
+  const hx = shoot.hx, hy = shoot.hy; shoot = null;
+  for (let i = 0; i < 34; i++) { const a = Math.random() * Math.PI * 2, v = rand(30, 90); parts.push({ x: hx, y: hy, vx: Math.cos(a) * v, vy: Math.sin(a) * v, c: i % 3 ? "#fff1cc" : GOLD, life: 1.7, max: 1.7, drag: 1.5, g: 8, w: 1.5 }); }
+  Music.star(); toast("You caught a shooting star. Make a wish!");
+  try { navigator.vibrate && navigator.vibrate([10, 30, 10]); } catch (e) {}
+  return true;
+}
+
+/* ---------- things in the city that answer a tap ---------- */
+const fx = [];
+function hitCity(x, y) {
+  if (!city || !city.hot || !city.ox) return null;
+  for (const h of [...city.hot].sort((a, b) => b.z - a.z)) {
+    const sx = h.x + city.ox[h.z], sy = h.y + city.oy;
+    if (x >= sx - 6 && x <= sx + h.w + 6 && y >= sy - 6 && y <= sy + h.h + 6) return h;
+  }
+  return null;
+}
+function tapCity(h) {
+  if (fx.some(f => f.h === h && f.t < f.T * .6)) return;
+  if (h.k === "temple") {
+    fx.push({ k: "ring", h, t: 0, T: 1.6 }, { k: "ring", h, t: -.45, T: 1.6 });
+    Music.templeBell();
+  } else if (h.k === "clock") {
+    const now = new Date();
+    fx.push({ k: "ring", h, t: 0, T: 1.2, small: true }, { k: "bubble", h, t: 0, T: 3, text: now.toLocaleTimeString([], { hour: "numeric", minute: "2-digit" }) });
+    Music.clock(now.getHours() % 12 || 12);
+  } else if (h.k === "person") {
+    fx.push({ k: "wave", h, t: 0, T: 2.4 }, { k: "bubble", h, t: 0, T: 2.6, text: ["Happy Diwali!", "Shubh Deepavali!", "Happy Diwali to you too!"][Math.floor(Math.random() * 3)] });
+    Music.pop();
+  }
+  hideHint();
+}
+function bubble(x, y, text, a) {
+  ctx.font = "600 12px Figtree, sans-serif";
+  const w = ctx.measureText(text).width + 16, h = 24, bx = Math.max(8, Math.min(W - 8 - w, x - w / 2)), by = y - h - 8;
+  ctx.globalAlpha = a; ctx.fillStyle = "#fff4df";
+  ctx.beginPath(); ctx.roundRect ? ctx.roundRect(bx, by, w, h, 12) : ctx.rect(bx, by, w, h); ctx.fill();
+  ctx.beginPath(); ctx.moveTo(x - 5, by + h - .5); ctx.lineTo(x + 5, by + h - .5); ctx.lineTo(x, by + h + 6); ctx.fill();
+  ctx.fillStyle = "#2c1a0e"; ctx.textAlign = "center"; ctx.textBaseline = "middle"; ctx.fillText(text, bx + w / 2, by + h / 2 + .5);
+  ctx.textBaseline = "alphabetic"; ctx.globalAlpha = 1;
+}
+function fxTick(dt) {
+  if (!fx.length) return;
+  const s = city.s;
+  for (let i = fx.length - 1; i >= 0; i--) {
+    const f = fx[i]; f.t += dt; if (f.t >= f.T) { fx.splice(i, 1); continue; } if (f.t < 0) continue;
+    const p = f.t / f.T, ax = f.h.fx + city.ox[f.h.z], ay = f.h.fy + city.oy;
+    if (f.k === "ring") {
+      ctx.globalAlpha = (1 - p) * .9; ctx.strokeStyle = "#ffd37a"; ctx.lineWidth = 2;
+      ctx.beginPath(); ctx.arc(ax, ay, (f.small ? 8 : 6) * s + p * (f.small ? 30 : 70) * s, 0, 7); ctx.stroke();
+      ctx.globalAlpha = (1 - p) * .6; ctx.drawImage(glow("#ffc35a"), ax - 26 * s, ay - 26 * s, 52 * s, 52 * s); ctx.globalAlpha = 1;
+    } else if (f.k === "bubble") {
+      const a = Math.min(1, f.t * 6, (f.T - f.t) * 3);
+      bubble(ax, f.h.y + city.oy - 2, f.text, a);
+    } else if (f.k === "wave") {
+      const ang = -1.25 + .45 * Math.sin(f.t * 13);
+      ctx.save(); ctx.translate(ax + 1.2 * s, ay); ctx.rotate(ang); ctx.fillStyle = CITY.ink; ctx.fillRect(0, -.7 * s, 7.5 * s, 1.4 * s); ctx.restore();
+    }
+  }
+}
+
+/* ---------- first-time guide ---------- */
+function openGuide() {
+  const g = $("guide"); g.hidden = false; requestAnimationFrame(() => g.classList.add("show"));
+  showScrim(closeGuide); hideHint(); setTimeout(() => $("gGo").focus({ preventScroll: true }), 50);
+}
+function closeGuide() {
+  const g = $("guide"); if (g.hidden) return;
+  g.classList.remove("show"); setTimeout(() => g.hidden = true, 380); hideScrim();
+  lsSet("skyw-guide", true);
+  const pool = lanterns.filter(l => !l.wish.mine && l.y > H * .22 && l.y < H - lift - groundH - 40).sort((a, b) => b.depth - a.depth);
+  if (pool[0]) { demo = pool[0]; clearTimeout(window.__demoT); window.__demoT = setTimeout(() => { demo = null; }, 15000); }
+}
+$("gGo").onclick = closeGuide;
+$("help").onclick = openGuide;
+
+/* ---------- boot ---------- */
+function countLine() {
+  const n = store.total;
+  if (!LIVE) return `<b>${n}</b> lanterns · preview`;
+  if (n === 0) return "Be the first lantern tonight";
+  return `<b>${n.toLocaleString("en-IN")}</b> ${n === 1 ? "lantern" : "lanterns"} ${n < SEED_UNTIL ? "so far" : "in the sky"}`;
+}
+function updateCount() { tickI = 0; renderTicker(); }
+async function boot() {
+  $("previewTag").hidden = true;
+  try { wishes = shuffle(await store.load()); }
+  catch (e) { wishes = [...mine]; toast("Couldn't reach the sky. Please try again in a little while."); }
+  wishes = wishes.filter(w => !reported.has(w.id));
+  resize(); updateCount();
+  requestAnimationFrame(t => { last = t; frame(t); });
+  const giftId = new URLSearchParams(location.search).get("l");
+  const gifted = giftId ? await openGift(giftId) : false;
+  if (!gifted && !lsGet("skyw-guide", false)) setTimeout(openGuide, 900);
+  else if (!gifted) setTimeout(checkJourney, 1200);
+  loadCityCounts();
+  countVisit();
+  if (LIVE) setInterval(() => { if (!document.hidden) loadCityCounts(); }, 60000);
+  if (LIVE) setInterval(async () => {
+    if (document.hidden) return;
+    try {
+      const newest = wishes.reduce((a, w) => (!w.sample && w.created_at > a ? w.created_at : a), "1970");
+      const rows = (await store.since(newest)).filter(r => !wishes.some(w => w.id === r.id));
+      if (rows.length) { wishes.push(...rows); store.total += rows.length; updateCount();
+        if (store.total >= SEED_UNTIL && wishes.some(w => w.sample)) wishes = wishes.filter(w => !w.sample);
+        for (const r of rows) if (lanterns.length < maxLanterns) lanterns.push(spawn(r, false)); else cursor = wishes.length - rows.length; }
+    } catch (e) {}
+  }, 30000);
+}
+addEventListener("resize", () => { clearTimeout(window.__rz); window.__rz = setTimeout(resize, 150); });
+boot();
+</script>
+
+</body>
+</html>
