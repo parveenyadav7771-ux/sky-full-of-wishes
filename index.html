@@ -324,9 +324,6 @@ textarea.copybox{position:fixed;left:-9999px;top:0;width:10px;height:10px}
         <span style="font-size:14px;color:var(--muted)">Lantern colour</span>
         <div class="swatches" id="swatches"></div>
       </div>
-      <label class="field" for="forName"><span class="lbl">Light it for someone <span class="opt">(optional)</span></span>
-        <input type="text" id="forName" maxlength="30" placeholder="Maa, my team, Riya…" autocomplete="off">
-      </label>
       <label class="field" for="city"><span class="lbl">City <span class="opt">(optional)</span></span>
         <input type="text" id="city" maxlength="30" placeholder="Delhi, Pune, Kochi…" autocomplete="off" list="cityList">
         <datalist id="cityList"></datalist>
@@ -1322,8 +1319,8 @@ $("openWrite").onclick = () => {
   openSheet("writeSheet"); setTimeout(() => $("wish").focus(), 450); hideHint();
 };
 $("toFold").onclick = () => {
-  const text = $("wish").value.trim(), city = $("city").value.trim(), forName = $("forName").value.trim();
-  const bad = checkWish(text) || (forName ? checkWish(forName + " ok") : "") || (city ? checkWish(city + " ok") : "");
+  const text = $("wish").value.trim(), city = $("city").value.trim();
+  const bad = checkWish(text) || (city ? checkWish(city + " ok") : "");
   if (bad) { $("wErr").textContent = bad; $("wErr").hidden = false; return; }
   $("stepWrite").style.display = "none"; $("stepFold").hidden = false;
   const lw = $("lw"); lw.classList.remove("folded"); lw.style.setProperty("--lit", 0);
@@ -1365,7 +1362,7 @@ async function release() {
   $("holdLabel").textContent = "Releasing your lantern…";
   hb.disabled = true;
   try {
-    const row = await store.add({ text: $("wish").value.trim(), color: pickColor, city: normCity($("city").value), for_name: $("forName").value.trim().replace(/\s+/g, " ") || null });
+    const row = await store.add({ text: $("wish").value.trim(), color: pickColor, city: normCity($("city").value) });
     try { navigator.vibrate && navigator.vibrate([20, 40, 30]); } catch (e) {}
     myLast = row; journeyMode = false;
     lsSet("kandil-last", Date.now());
@@ -1381,7 +1378,7 @@ async function release() {
       $("empty").hidden = true;
       updateCount();
       if (row.city) { lsSet("skyw-city", row.city); const n = bumpCity(row.city); myLast.cityN = n; setTimeout(() => toast(`${row.city} now has ${n.toLocaleString("en-IN")} ${lanternWord(n)} tonight`), 1200); }
-      $("wish").value = ""; $("forName").value = ""; $("counter").textContent = "0/140"; $("toFold").disabled = true;
+      $("wish").value = ""; $("counter").textContent = "0/140"; $("toFold").disabled = true;
       holdP = 0; hb.style.setProperty("--p", 0); launching = false;
       setTimeout(openShare, 3400);
     }, reduced ? 50 : 1100);
