@@ -270,7 +270,7 @@ textarea.copybox{position:fixed;left:-9999px;top:0;width:10px;height:10px}
 <p class="hint" id="hint" hidden></p>
 
 <div class="dock gutter">
-  <button class="btn" id="openWrite"><i class="flame-ico" aria-hidden="true"></i>Release your lantern</button>
+  <button class="btn" id="openWrite"><i class="flame-ico" aria-hidden="true"></i>Make a wish</button>
   <button class="link" id="readRandom" style="color:var(--ink)">Read a stranger's wish</button>
 </div>
 
@@ -301,7 +301,7 @@ textarea.copybox{position:fixed;left:-9999px;top:0;width:10px;height:10px}
   <h2 id="gTitle">Every lantern is someone's Diwali wish</h2>
   <ol class="steps">
     <li><span class="n" aria-hidden="true">1</span><b>Tap a lantern to read it</b></li>
-    <li><span class="n" aria-hidden="true">2</span><b>Write your own wish</b></li>
+    <li><span class="n" aria-hidden="true">2</span><b>Make your own wish</b></li>
     <li><span class="n" aria-hidden="true">3</span><b>Hold to light it, then let it go</b></li>
   </ol>
   <p class="t">Every wish is anonymous. Tap the sky and the city for little surprises.</p>
@@ -363,7 +363,7 @@ textarea.copybox{position:fixed;left:-9999px;top:0;width:10px;height:10px}
     <ol class="board" id="board"></ol>
     <p class="note" id="boardNote"></p>
     <div class="sheet-foot">
-      <button class="btn block" id="boardGo">Release a lantern for my city</button>
+      <button class="btn block" id="boardGo">Make a wish for my city</button>
       <button class="link" data-close>Back to the sky</button>
     </div>
   </div>
@@ -1613,7 +1613,7 @@ async function drawShare(w, showWish) {
   x.fillStyle = "#ffe7a8"; x.font = '600 34px "Figtree", sans-serif';
   const fade = x.createLinearGradient(0, CH - 190, 0, CH); fade.addColorStop(0, "rgba(5,4,18,0)"); fade.addColorStop(1, "rgba(5,4,18,.9)");
   x.fillStyle = fade; x.fillRect(0, CH - 190, CW, 190);
-  x.fillStyle = "#ffe7a8"; x.fillText("Release your own lantern", CW / 2, CH - 56);
+  x.fillStyle = "#ffe7a8"; x.fillText("Make a wish of your own", CW / 2, CH - 56);
   return c.toDataURL("image/png");
 }
 function wrap(x, text, maxW) {
@@ -1913,7 +1913,7 @@ function openBoard() {
     <span class="nm"><span>${escapeHTML(r.city)}${r.city === myCity ? "<em>your city</em>" : ""}</span><span class="bar"><i style="width:${Math.max(4, r.n / max * 100)}%"></i></span></span>
     <span class="n">${r.n.toLocaleString("en-IN")}</span></li>`).join("");
   $("boardNote").textContent = LIVE ? "Updates every minute." : "Sample numbers for the preview. Real counts appear once the live sky is connected.";
-  $("boardGo").textContent = myCity ? `Release another lantern for ${myCity}` : "Release a lantern for my city";
+  $("boardGo").textContent = myCity ? `Make a wish for ${myCity}` : "Make a wish for my city";
   openSheet("citySheet"); hideHint();
 }
 $("ticker").onclick = () => { if (hasBoard()) openBoard(); };
