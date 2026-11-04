@@ -251,7 +251,7 @@ textarea.copybox{position:fixed;left:-9999px;top:0;width:10px;height:10px}
 <header class="top gutter">
   <div class="brand">
     <h1>A Sky Full of Wishes</h1>
-    <button class="stat" id="ticker" aria-label="Lanterns tonight. Tap to see cities"><span class="tdot" aria-hidden="true"></span><span id="tickerText"></span></button>
+    <button class="stat" id="ticker" aria-label="Lantern count. Tap to see cities"><span class="tdot" aria-hidden="true"></span><span id="tickerText"></span></button>
   </div>
   <div class="icons">
     <button class="icon music" id="music" aria-pressed="false" aria-label="Play music">
@@ -361,8 +361,8 @@ textarea.copybox{position:fixed;left:-9999px;top:0;width:10px;height:10px}
 <section class="sheet" id="citySheet" role="dialog" aria-modal="true" aria-labelledby="cTitle" hidden>
   <div class="sheet-in gutter">
     <div class="grab" aria-hidden="true"></div>
-    <h2 id="cTitle">Cities lighting up tonight</h2>
-    <p class="lead">Lanterns released in the last 24 hours. Add yours to push your city up.</p>
+    <h2 id="cTitle">Lanterns by city</h2>
+    <p class="lead">All lanterns since launch. Add yours to push your city up.</p>
     <ol class="board" id="board"></ol>
     <p class="note" id="boardNote"></p>
     <div class="sheet-foot">
@@ -1380,7 +1380,7 @@ async function release() {
       lanterns.push(l); const drop = lanterns.findIndex(x => !x.wish.mine && x !== selected); if (lanterns.length > maxLanterns + 2 && drop >= 0) lanterns.splice(drop, 1);
       $("empty").hidden = true;
       updateCount();
-      if (row.city) { lsSet("skyw-city", row.city); const n = bumpCity(row.city); myLast.cityN = n; setTimeout(() => toast(`${row.city} now has ${n.toLocaleString("en-IN")} ${lanternWord(n)} tonight`), 1200); }
+      if (row.city) { lsSet("skyw-city", row.city); const n = bumpCity(row.city); myLast.cityN = n; setTimeout(() => toast(`${row.city} now has ${n.toLocaleString("en-IN")} ${lanternWord(n)}`), 1200); }
       $("wish").value = ""; $("counter").textContent = "0/140"; $("toFold").disabled = true;
       holdP = 0; hb.style.setProperty("--p", 0); launching = false;
       setTimeout(openShare, 3400);
@@ -1557,7 +1557,7 @@ function giftURL(w) {
 function caption() {
   if (journeyMode && myLast) return `My Diwali wish has been ${journeyLine(myLast).toLowerCase()} 🪔\nAdd yours to the sky:`;
   const base = "This Diwali I folded a wish into a lantern and added it to a sky full of wishes 🪔";
-  if (myLast && myLast.city && myLast.cityN) return `${base}\n${myLast.city} has ${myLast.cityN.toLocaleString("en-IN")} ${lanternWord(myLast.cityN)} in the sky tonight. Add one for your city:`;
+  if (myLast && myLast.city && myLast.cityN) return `${base}\n${myLast.city} has ${myLast.cityN.toLocaleString("en-IN")} ${lanternWord(myLast.cityN)} in the sky. Add one for your city:`;
   return base + "\nAdd yours:";
 }
 
@@ -1606,7 +1606,7 @@ async function drawShare(w, showWish) {
     lines.forEach((l, i) => x.fillText(l, CW / 2, y + i * size * 1.25));
     y += lines.length * size * 1.25;
     if (journeyMode) { x.fillStyle = "#ffcf6a"; x.font = '600 32px "Figtree", sans-serif'; x.fillText(`${journeyLine(w)}  ·  ${(w.light_count || 0).toLocaleString("en-IN")} sent light`, CW / 2, y + 8); }
-    else if (w.city) { x.fillStyle = "#aba6cf"; x.font = '400 30px "Figtree", sans-serif'; x.fillText("— " + w.city + (w.cityN ? `  ·  ${w.cityN.toLocaleString("en-IN")} ${lanternWord(w.cityN)} tonight` : ""), CW / 2, y + 6); }
+    else if (w.city) { x.fillStyle = "#aba6cf"; x.font = '400 30px "Figtree", sans-serif'; x.fillText("— " + w.city + (w.cityN ? `  ·  ${w.cityN.toLocaleString("en-IN")} ${lanternWord(w.cityN)}` : ""), CW / 2, y + 6); }
   } else {
     x.fillStyle = "#f6eddf"; x.font = '52px "Kalam", cursive';
     const two = w.for_name && !journeyMode ? ["I lit a lantern", "for " + w.for_name + " tonight."] : ["I let my wish go", "into the sky tonight."];
@@ -1856,7 +1856,7 @@ if (musicPref) {
   evs.forEach(n => addEventListener(n, first, true));
 }
 
-/* ---------- cities tonight ---------- */
+/* ---------- lanterns by city (all time) ---------- */
 const CITY_ALIAS = { "bangalore": "Bengaluru", "bengaluru": "Bengaluru", "bombay": "Mumbai", "new delhi": "Delhi", "delhi ncr": "Delhi", "ncr": "Delhi", "gurgaon": "Gurugram", "calcutta": "Kolkata", "madras": "Chennai", "poona": "Pune", "trivandrum": "Thiruvananthapuram", "cochin": "Kochi", "baroda": "Vadodara", "benaras": "Varanasi", "banaras": "Varanasi", "mysore": "Mysuru" };
 const CITY_LIST = ["Delhi", "Mumbai", "Bengaluru", "Hyderabad", "Chennai", "Kolkata", "Pune", "Ahmedabad", "Jaipur", "Lucknow", "Chandigarh", "Indore", "Kochi", "Gurugram", "Noida", "Surat", "Bhopal", "Patna", "Nagpur", "Varanasi", "Goa", "Dehradun", "Coimbatore", "Visakhapatnam", "Guwahati"];
 function normCity(c) {
@@ -1875,7 +1875,7 @@ async function loadCityCounts() {
     try { const res = await store.api("city_tonight?select=city,n&order=n.desc&limit=10"); cityCounts = await res.json(); } catch (e) { return; }
   } else {
     const m = { ...SAMPLE_COUNTS };
-    for (const w of mine) if (w.city && Date.now() - new Date(w.created_at).getTime() < 864e5) m[w.city] = (m[w.city] || 0) + 1;
+    for (const w of mine) if (w.city) m[w.city] = (m[w.city] || 0) + 1;
     cityCounts = Object.entries(m).map(([city, n]) => ({ city, n })).sort((a, b) => b.n - a.n).slice(0, 10);
   }
   renderTicker();
@@ -1888,7 +1888,7 @@ function bumpCity(city) {
   renderTicker(true);
   return row.n;
 }
-function tickerLine(r) { return `<b>${r.n.toLocaleString("en-IN")}</b> ${lanternWord(r.n)} from ${escapeHTML(r.city)} tonight`; }
+function tickerLine(r) { return `<b>${r.n.toLocaleString("en-IN")}</b> ${lanternWord(r.n)} from ${escapeHTML(r.city)}`; }
 function escapeHTML(t) { return String(t).replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c])); }
 const hasBoard = () => cityCounts.length > 0 && !(LIVE && cityCounts.length < 3);
 function statLines() {
